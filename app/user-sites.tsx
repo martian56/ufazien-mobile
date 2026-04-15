@@ -100,10 +100,15 @@ export default function UserSitesScreen() {
 
       const data = response.data;
 
+      const newResults = data.results || [];
       if (reset) {
-        setWebsites(data.results || []);
+        setWebsites(newResults);
       } else {
-        setWebsites((prev) => [...prev, ...(data.results || [])]);
+        setWebsites((prev) => {
+          const existingIds = new Set(prev.map((w) => w.id));
+          const unique = newResults.filter((w) => !existingIds.has(w.id));
+          return [...prev, ...unique];
+        });
       }
 
       setHasMore(!!data.next);
