@@ -1,50 +1,132 @@
-# Welcome to your Expo app 👋
+# Ufazien Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Academic tools and community for UFAZ students.**
 
-## Get started
+Ufazien helps students track their academic progress: calculate GPA across grading systems, build weighted average schemas, read and write blog posts, and manage their profile — all from a single mobile app.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+- **GPA Calculator** — Enter semester or yearly averages across three grading systems (UFAZ 20-point, Azerbaijan 100-point, direct 4.0 GPA) with real-time conversion and auto-save.
+- **Average Calculator** — Create custom weighted-average schemas, share them publicly, and track grades per field with debounced auto-save.
+- **Blog** — Browse, search, filter, like, and bookmark posts. Write comments with nested replies. Follow authors.
+- **Dashboard** — Profile summary, stats (GPA, credits, followers), quick actions, and notification feed.
+- **Settings** — Profile editing, avatar upload, academic preferences, notification controls, password setup for OAuth users, and security options.
+- **Authentication** — Email/password and Google OAuth (PKCE flow) with JWT token management and automatic refresh.
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## Getting Started
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Prerequisites
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Node.js 18+
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- Android Studio (for Android emulator) or Xcode (for iOS simulator)
 
-## Get a fresh project
-
-When you're ready, run:
+### Install
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Run
 
-## Learn more
+```bash
+npm start            # Start Expo dev server (scan QR with Expo Go)
+npm run dev          # Start with development client (local native build)
+npm run android      # Launch on Android emulator
+npm run ios          # Launch on iOS simulator
+npm run web          # Launch in browser
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+### Lint and Format
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run lint         # ESLint check
+npm run lint:fix     # Auto-fix lint issues
+npm run format       # Prettier format
+npm run format:check # Check formatting without changes
+```
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## Build
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Ufazien uses [EAS Build](https://docs.expo.dev/build/introduction/) for native builds.
+
+| Profile       | Distribution | Notes |
+| ------------- | ------------ | ----- |
+| `development` | Internal     | Dev client with debugging |
+| `preview`     | Internal     | Testable APK / IPA |
+| `production`  | Store        | Auto-incremented version |
+
+```bash
+npx eas build --profile preview --platform android
+npx eas build --profile production --platform all
+```
+
+---
+
+## Project Structure
+
+```
+app/                    # Screens (file-based routing via expo-router)
+├── (tabs)/             # Bottom tab navigation (Home, GPA, Average, Blog, Settings)
+├── auth/               # Login and signup screens
+├── blog/[id].tsx       # Dynamic blog detail
+├── _layout.tsx         # Root stack with theme and nav bar config
+components/ui/          # Design system primitives (Button, Card, Input, Avatar, Badge, ...)
+config/api.ts           # Axios client with auth interceptor and token refresh
+constants/theme.ts      # Color tokens, shadows, radii, dark mode
+contexts/AuthContext.tsx # Auth state, login, signup, Google OAuth
+hooks/                  # useDebounce, useToast, useColorScheme, useThemeColor
+utils/                  # GPA conversion logic, major/year formatting
+```
+
+---
+
+## Built With
+
+[![React Native](https://img.shields.io/badge/React%20Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Expo Router](https://img.shields.io/badge/Expo%20Router-000020?style=for-the-badge&logo=expo&logoColor=white)](https://docs.expo.dev/router/introduction/)
+[![Axios](https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white)](https://axios-http.com/)
+
+---
+
+## API
+
+The app connects to `https://api.ufazien.com/api`. Key endpoint groups:
+
+| Group | Purpose |
+| ----- | ------- |
+| `/auth/` | Login, signup, Google OAuth, token refresh, user profile |
+| `/gpa/` | Input state, statistics, calculations, GPA updates |
+| `/average/` | Schema CRUD, grade updates, public schema discovery |
+| `/blog/` | Posts, categories, comments, likes, bookmarks |
+| `/notifications/` | Notification list and unread count |
+| `/feedback/` | Submit feedback and view history |
+| `/hosting/` | Subscription, websites, databases |
+
+---
+
+## Contributing
+
+Contributions are welcome. Please open an issue for bugs or feature ideas, then submit a pull request.
+
+---
+
+## Contributors
+
+<a href="https://github.com/martian56/ufazien-mobile/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=martian56/ufazien-mobile" />
+</a>
+
+---
+
+## License
+
+All rights reserved.
