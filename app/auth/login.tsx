@@ -1,0 +1,256 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { GoogleButton } from '@/components/ui/GoogleButton';
+import { Divider } from '@/components/ui/Divider';
+import { Checkbox } from '@/components/ui/Checkbox';
+import {
+  BackgroundPrimary,
+  TextPrimary,
+  TextSecondary,
+  TextTertiary,
+  PrimaryBlue,
+} from '@/constants/theme';
+
+export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const { login, loginWithGoogle } = useAuth();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  const validate = () => {
+    const newErrors: { email?: string; password?: string } = {};
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogin = async () => {
+    if (!validate()) return;
+    setLoading(true);
+    try {
+      await login(email, password);
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Alert.alert('Login Failed', error.message || 'Invalid credentials');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      await loginWithGoogle();
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      if (error.message !== 'Sign-in cancelled') {
+        Alert.alert('Google Sign-In Failed', error.message || 'Unable to sign in with Google');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleForgotPassword = () => {
+    Alert.alert('Forgot Password', 'Password reset functionality will be available soon.');
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 20 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.headerSection}>
+            <Text style={styles.title}>Welcome back</Text>
+            <Text style={styles.subtitle}>Sign in to your Ufazien account</Text>
+          </View>
+
+          {/* Social Login */}
+          <GoogleButton onPress={handleGoogleLogin} loading={googleLoading} disabled={loading} />
+
+          <Divider />
+
+          {/* Form */}
+          <Input
+            label="Email"
+            placeholder="you@example.com"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (errors.email) setErrors({ ...errors, email: undefined });
+            }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            leftIcon={<Ionicons name="mail-outline" size={18} color={TextTertiary} />}
+            error={errors.email}
+          />
+
+          <Input
+            label="Password"
+            placeholder="Your password"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errors.password) setErrors({ ...errors, password: undefined });
+            }}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoComplete="password"
+            leftIcon={<Ionicons name="lock-closed-outline" size={18} color={TextTertiary} />}
+            rightIcon={
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={18}
+                  color={TextTertiary}
+                />
+              </TouchableOpacity>
+            }
+            error={errors.password}
+          />
+
+          <View style={styles.optionsRow}>
+            <View style={styles.rememberMe}>
+              <Checkbox checked={rememberMe} onPress={() => setRememberMe(!rememberMe)} />
+              <Text style={styles.rememberText}>Remember me</Text>
+            </View>
+            <TouchableOpacity onPress={handleForgotPassword} hitSlop={{ top: 8, bottom: 8 }}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Button
+            title="Sign In"
+            onPress={handleLogin}
+            loading={loading}
+            disabled={googleLoading}
+            size="lg"
+            style={styles.submitButton}
+          />
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>{"Don't have an account? "}</Text>
+            <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+              <Text style={styles.footerLink}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: BackgroundPrimary,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 400,
+    alignSelf: 'center',
+  },
+  headerSection: {
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: TextPrimary,
+    marginBottom: 6,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: TextSecondary,
+    lineHeight: 21,
+  },
+  optionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  rememberMe: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rememberText: {
+    fontSize: 13,
+    color: TextSecondary,
+  },
+  forgotText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: PrimaryBlue,
+  },
+  submitButton: {
+    marginTop: 20,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 28,
+  },
+  footerText: {
+    fontSize: 14,
+    color: TextSecondary,
+  },
+  footerLink: {
+    fontSize: 14,
+    color: PrimaryBlue,
+    fontWeight: '600',
+  },
+});
