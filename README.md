@@ -129,4 +129,4 @@ Contributions are welcome. Please open an issue for bugs or feature ideas, then 
 
 ## License
 
-All rights reserved.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
