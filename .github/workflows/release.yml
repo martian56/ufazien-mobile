@@ -5,9 +5,125 @@ on:
     tags:
       - 'v*.*.*'
 
+permissions:
+  contents: write
+
 jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: version
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Find the previous tag
+          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p')
+
+          if [ -z "$PREV_TAG" ]; then
+            # First release — use all commits
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          echo "Previous tag: ${PREV_TAG:-none}"
+          echo "Range: $RANGE"
+
+          # Categorize commits
+          FEATURES=$(git log $RANGE --pretty=format:"- %s (%h)" --grep="^feat" --no-merges 2>/dev/null || true)
+          FIXES=$(git log $RANGE --pretty=format:"- %s (%h)" --grep="^fix" --no-merges 2>/dev/null || true)
+          CHORES=$(git log $RANGE --pretty=format:"- %s (%h)" --grep="^chore" --no-merges 2>/dev/null || true)
+          OTHER=$(git log $RANGE --pretty=format:"- %s (%h)" --no-merges --invert-grep --grep="^feat" --grep="^fix" --grep="^chore" 2>/dev/null || true)
+
+          # Count contributors
+          CONTRIBUTORS=$(git log $RANGE --pretty=format:"%an" --no-merges | sort -u | while read name; do echo "- $name"; done)
+          COMMIT_COUNT=$(git rev-list --count $RANGE --no-merges 2>/dev/null || echo "0")
+
+          # Build the body
+          BODY="## What's Changed"
+          BODY="${BODY}
+
+          **${COMMIT_COUNT} commits** since ${PREV_TAG:-the beginning}"
+
+          if [ -n "$FEATURES" ]; then
+            BODY="${BODY}
+
+          ### Features
+          ${FEATURES}"
+          fi
+
+          if [ -n "$FIXES" ]; then
+            BODY="${BODY}
+
+          ### Bug Fixes
+          ${FIXES}"
+          fi
+
+          if [ -n "$CHORES" ]; then
+            BODY="${BODY}
+
+          ### Maintenance
+          ${CHORES}"
+          fi
+
+          if [ -n "$OTHER" ]; then
+            BODY="${BODY}
+
+          ### Other
+          ${OTHER}"
+          fi
+
+          if [ -n "$CONTRIBUTORS" ]; then
+            BODY="${BODY}
+
+          ### Contributors
+          ${CONTRIBUTORS}"
+          fi
+
+          if [ -n "$PREV_TAG" ]; then
+            BODY="${BODY}
+
+          ---
+
+          **Full Changelog**: [\`${PREV_TAG}...${GITHUB_REF#refs/tags/}\`](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${GITHUB_REF#refs/tags/})"
+          fi
+
+          # Write to file to preserve newlines
+          echo "$BODY" > /tmp/release-notes.md
+
+      - name: Determine pre-release
+        id: prerelease
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          if echo "$TAG" | grep -qE "(alpha|beta|rc)"; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ steps.version.outputs.tag }}
+          body_path: /tmp/release-notes.md
+          draft: false
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
+          generate_release_notes: true
+
   build-android:
     name: Build Android
+    needs: release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,23 +141,3 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - run: eas build --platform android --profile production --non-interactive
-
-  build-ios:
-    name: Build iOS
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - run: npm ci
-
-      - uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - run: eas build --platform ios --profile production --non-interactive
