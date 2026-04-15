@@ -56,11 +56,11 @@ npm run format:check # Check formatting without changes
 
 Ufazien uses [EAS Build](https://docs.expo.dev/build/introduction/) for native builds.
 
-| Profile       | Distribution | Notes |
-| ------------- | ------------ | ----- |
+| Profile       | Distribution | Notes                     |
+| ------------- | ------------ | ------------------------- |
 | `development` | Internal     | Dev client with debugging |
-| `preview`     | Internal     | Testable APK / IPA |
-| `production`  | Store        | Auto-incremented version |
+| `preview`     | Internal     | Testable APK / IPA        |
+| `production`  | Store        | Auto-incremented version  |
 
 ```bash
 npx eas build --profile preview --platform android
@@ -101,15 +101,15 @@ utils/                  # GPA conversion logic, major/year formatting
 
 The app connects to `https://api.ufazien.com/api`. Key endpoint groups:
 
-| Group | Purpose |
-| ----- | ------- |
-| `/auth/` | Login, signup, Google OAuth, token refresh, user profile |
-| `/gpa/` | Input state, statistics, calculations, GPA updates |
-| `/average/` | Schema CRUD, grade updates, public schema discovery |
-| `/blog/` | Posts, categories, comments, likes, bookmarks |
-| `/notifications/` | Notification list and unread count |
-| `/feedback/` | Submit feedback and view history |
-| `/hosting/` | Subscription, websites, databases |
+| Group             | Purpose                                                  |
+| ----------------- | -------------------------------------------------------- |
+| `/auth/`          | Login, signup, Google OAuth, token refresh, user profile |
+| `/gpa/`           | Input state, statistics, calculations, GPA updates       |
+| `/average/`       | Schema CRUD, grade updates, public schema discovery      |
+| `/blog/`          | Posts, categories, comments, likes, bookmarks            |
+| `/notifications/` | Notification list and unread count                       |
+| `/feedback/`      | Submit feedback and view history                         |
+| `/hosting/`       | Subscription, websites, databases                        |
 
 ---
 

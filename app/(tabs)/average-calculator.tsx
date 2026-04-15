@@ -96,7 +96,7 @@ export default function AverageCalculatorScreen() {
   const [isEditingSchema, setIsEditingSchema] = useState(false); // Track if we're creating/editing vs using
   const [publicSchemasPage, setPublicSchemasPage] = useState(1);
   const [hasMorePublicSchemas, setHasMorePublicSchemas] = useState(true);
-  const debounceTimersRef = useRef<Record<number, NodeJS.Timeout>>({});
+  const debounceTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
   const insets = useSafeAreaInsets();
   const { toast, showSuccess, showError, hideToast } = useToast();
 
@@ -786,7 +786,11 @@ export default function AverageCalculatorScreen() {
                                 return (
                                   <Card
                                     key={fg.id}
-                                    style={[styles.gradeCard, isSaving && styles.gradeCardSaving]}
+                                    style={
+                                      isSaving
+                                        ? [styles.gradeCard, styles.gradeCardSaving]
+                                        : styles.gradeCard
+                                    }
                                   >
                                     <View style={styles.gradeHeader}>
                                       <View>

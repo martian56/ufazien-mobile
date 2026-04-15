@@ -94,8 +94,8 @@ export default function GPACalculatorScreen() {
   const [showConversionModal, setShowConversionModal] = useState(false);
   const { toast, showError, hideToast } = useToast();
 
-  const inputSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const gpaSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const inputSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const gpaSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load initial state
   useEffect(() => {

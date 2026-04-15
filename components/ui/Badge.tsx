@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, StyleSheet, StyleProp, ViewStyle, TextStyle } from 'react-native';
 import { Colors, RadiusFull } from '@/constants/theme';
 
 interface BadgeProps {
   label: string;
   variant?: 'default' | 'primary' | 'success' | 'error' | 'warning';
   size?: 'sm' | 'md';
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   textStyle?: TextStyle;
 }
 
