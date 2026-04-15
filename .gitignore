@@ -1,7 +1,21 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
 # dependencies
 node_modules/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# AI / coding agents
+.agents/
+.claude/
+.cursor/
+.cursorignore
+.cursorindexingignore
+.cursorrules
+.github/copilot-instructions.md
+CLAUDE.md
+skills-lock.json
+mobile.md
 
 # Expo
 .expo/
@@ -9,35 +23,40 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Native (generated)
+/ios
+/android
 .kotlin/
+
+# Keys and credentials
 *.orig.*
 *.jks
 *.p8
 *.p12
+*.p8
 *.key
+*.pem
 *.mobileprovision
 
 # Metro
 .metro-health-check*
 
-# debug
+# Debug logs
 npm-debug.*
 yarn-debug.*
 yarn-error.*
 
-# macOS
-.DS_Store
-*.pem
-
-# local env files
+# Local scripts and env
+local/
+.env
+.env.*
 .env*.local
 
-# typescript
+# macOS
+.DS_Store
+
+# TypeScript build info
 *.tsbuildinfo
 
+# Expo template leftover
 app-example
-
-# generated native folders
-/ios
-/android
