@@ -15,8 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { GoogleButton } from '@/components/ui/GoogleButton';
-import { Divider } from '@/components/ui/Divider';
 import {
   BackgroundPrimary,
   TextPrimary,
@@ -34,7 +32,6 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
@@ -42,7 +39,7 @@ export default function SignUpScreen() {
     password?: string;
     confirmPassword?: string;
   }>({});
-  const { signup, loginWithGoogle } = useAuth();
+  const { signup } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -82,20 +79,6 @@ export default function SignUpScreen() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setGoogleLoading(true);
-    try {
-      await loginWithGoogle();
-      router.replace('/(tabs)');
-    } catch (error: any) {
-      if (error.message !== 'Sign-in cancelled') {
-        Alert.alert('Google Sign-In Failed', error.message || 'Unable to sign in with Google');
-      }
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -115,10 +98,6 @@ export default function SignUpScreen() {
             <Text style={styles.title}>Create account</Text>
             <Text style={styles.subtitle}>Join Ufazien to track your academic progress</Text>
           </View>
-
-          <GoogleButton onPress={handleGoogleLogin} loading={googleLoading} disabled={loading} />
-
-          <Divider />
 
           {/* Name Row */}
           <View style={styles.nameRow}>
@@ -229,7 +208,6 @@ export default function SignUpScreen() {
             title="Create Account"
             onPress={handleSignup}
             loading={loading}
-            disabled={googleLoading}
             size="lg"
             style={styles.submitButton}
           />

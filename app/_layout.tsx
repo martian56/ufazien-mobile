@@ -88,7 +88,6 @@ export default function RootLayout() {
             <Stack.Screen name="user-sites" options={{ headerShown: false }} />
             <Stack.Screen name="hosting" options={{ headerShown: false }} />
             <Stack.Screen name="feedback" options={{ headerShown: false }} />
-            <Stack.Screen name="oauth" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
         </ThemeProvider>

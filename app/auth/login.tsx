@@ -15,8 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { GoogleButton } from '@/components/ui/GoogleButton';
-import { Divider } from '@/components/ui/Divider';
 import { Checkbox } from '@/components/ui/Checkbox';
 import {
   BackgroundPrimary,
@@ -32,9 +30,8 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const { login, loginWithGoogle } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -67,20 +64,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setGoogleLoading(true);
-    try {
-      await loginWithGoogle();
-      router.replace('/(tabs)');
-    } catch (error: any) {
-      if (error.message !== 'Sign-in cancelled') {
-        Alert.alert('Google Sign-In Failed', error.message || 'Unable to sign in with Google');
-      }
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
   const handleForgotPassword = () => {
     Alert.alert('Forgot Password', 'Password reset functionality will be available soon.');
   };
@@ -104,11 +87,6 @@ export default function LoginScreen() {
             <Text style={styles.title}>Welcome back</Text>
             <Text style={styles.subtitle}>Sign in to your Ufazien account</Text>
           </View>
-
-          {/* Social Login */}
-          <GoogleButton onPress={handleGoogleLogin} loading={googleLoading} disabled={loading} />
-
-          <Divider />
 
           {/* Form */}
           <Input
@@ -168,7 +146,6 @@ export default function LoginScreen() {
             title="Sign In"
             onPress={handleLogin}
             loading={loading}
-            disabled={googleLoading}
             size="lg"
             style={styles.submitButton}
           />
