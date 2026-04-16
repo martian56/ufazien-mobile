@@ -1,7 +1,7 @@
 {
   "name": "ufazien-mobile",
   "main": "expo-router/entry",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "scripts": {
     "dev": "expo start --dev-client",
     "start": "expo start",
@@ -12,7 +12,8 @@
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/image-utils": "^0.8.8",
