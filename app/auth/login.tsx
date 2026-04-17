@@ -25,7 +25,9 @@ import {
   PrimaryBlue,
 } from '@/constants/theme';
 
-const REMEMBERED_EMAIL_KEY = 'ufazien_login_remembered_email';
+const REMEMBERED_EMAIL_KEY = 'ufaz_login_remembered_email';
+// Legacy key (pre ufaz_* convention); migrated on read, then removed.
+const LEGACY_REMEMBERED_EMAIL_KEY = 'ufazien_login_remembered_email';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -42,7 +44,15 @@ export default function LoginScreen() {
     let active = true;
     (async () => {
       try {
-        const saved = await AsyncStorage.getItem(REMEMBERED_EMAIL_KEY);
+        let saved = await AsyncStorage.getItem(REMEMBERED_EMAIL_KEY);
+        if (saved == null) {
+          const legacy = await AsyncStorage.getItem(LEGACY_REMEMBERED_EMAIL_KEY);
+          if (legacy != null) {
+            await AsyncStorage.setItem(REMEMBERED_EMAIL_KEY, legacy);
+            await AsyncStorage.removeItem(LEGACY_REMEMBERED_EMAIL_KEY);
+            saved = legacy;
+          }
+        }
         if (saved && active) {
           setEmail(saved);
           setRememberMe(true);
@@ -80,8 +90,9 @@ export default function LoginScreen() {
       try {
         if (rememberMe) {
           await AsyncStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
+          await AsyncStorage.removeItem(LEGACY_REMEMBERED_EMAIL_KEY);
         } else {
-          await AsyncStorage.removeItem(REMEMBERED_EMAIL_KEY);
+          await AsyncStorage.multiRemove([REMEMBERED_EMAIL_KEY, LEGACY_REMEMBERED_EMAIL_KEY]);
         }
       } catch {
         // non-fatal
