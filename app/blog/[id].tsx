@@ -1,5 +1,5 @@
 // Blog Detail Screen
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,13 +22,8 @@ import { Toast } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import RenderHTML from 'react-native-render-html';
 import * as Linking from 'expo-linking';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  PrimaryBlue,
-  Colors,
-} from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
+import { ThemeColors } from '@/constants/theme';
 import { formatYearWithOrdinal, getMajorDisplayName } from '@/utils/majorUtils';
 import apiClient from '@/config/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -101,6 +96,8 @@ interface Comment {
 }
 
 export default function BlogDetailScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const router = useRouter();
   const navigation = useNavigation();
   const { user } = useAuth();
@@ -283,7 +280,7 @@ export default function BlogDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={PrimaryBlue} />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -311,7 +308,7 @@ export default function BlogDetailScreen() {
         {/* Header */}
         <Card style={styles.headerCard}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={TextPrimary} />
+            <Ionicons name="arrow-back" size={24} color={c.text} />
           </TouchableOpacity>
 
           {/* Author Info */}
@@ -397,7 +394,7 @@ export default function BlogDetailScreen() {
             contentWidth={width - 64}
             source={htmlContent}
             baseStyle={{
-              color: TextPrimary,
+              color: c.text,
               fontSize: 16,
               lineHeight: 24,
             }}
@@ -471,7 +468,7 @@ export default function BlogDetailScreen() {
               <Ionicons
                 name={post.is_liked ? 'heart' : 'heart-outline'}
                 size={24}
-                color={post.is_liked ? Colors.light.error : TextSecondary}
+                color={post.is_liked ? c.error : c.textSecondary}
               />
               <Text style={[styles.actionText, post.is_liked && styles.actionTextActive]}>
                 {post.likes_count}
@@ -479,7 +476,7 @@ export default function BlogDetailScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="chatbubble-outline" size={24} color={TextSecondary} />
+              <Ionicons name="chatbubble-outline" size={24} color={c.textSecondary} />
               <Text style={styles.actionText}>{comments.length}</Text>
             </TouchableOpacity>
 
@@ -487,12 +484,12 @@ export default function BlogDetailScreen() {
               <Ionicons
                 name={post.is_bookmarked ? 'bookmark' : 'bookmark-outline'}
                 size={24}
-                color={post.is_bookmarked ? PrimaryBlue : TextSecondary}
+                color={post.is_bookmarked ? c.primary : c.textSecondary}
               />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={sharePost} style={styles.actionButton}>
-              <Ionicons name="share-outline" size={24} color={TextSecondary} />
+              <Ionicons name="share-outline" size={24} color={c.textSecondary} />
             </TouchableOpacity>
           </View>
         </Card>
@@ -557,7 +554,7 @@ export default function BlogDetailScreen() {
                       <Ionicons
                         name={comment.is_liked ? 'heart' : 'heart-outline'}
                         size={16}
-                        color={comment.is_liked ? Colors.light.error : TextSecondary}
+                        color={comment.is_liked ? c.error : c.textSecondary}
                       />
                       <Text
                         style={[
@@ -603,7 +600,7 @@ export default function BlogDetailScreen() {
                             <Ionicons
                               name={reply.is_liked ? 'heart' : 'heart-outline'}
                               size={16}
-                              color={reply.is_liked ? Colors.light.error : TextSecondary}
+                              color={reply.is_liked ? c.error : c.textSecondary}
                             />
                             <Text
                               style={[
@@ -629,256 +626,257 @@ export default function BlogDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: BackgroundPrimary,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: BackgroundPrimary,
-    padding: 32,
-  },
-  errorText: {
-    fontSize: 18,
-    color: TextSecondary,
-    marginBottom: 24,
-  },
-  headerCard: {
-    margin: 16,
-    marginBottom: 8,
-    padding: 20,
-  },
-  backButton: {
-    marginBottom: 16,
-    padding: 4,
-  },
-  authorSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  authorInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  authorName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginBottom: 4,
-  },
-  authorMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  authorMetaText: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  authorMetaSeparator: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 16,
-    lineHeight: 36,
-  },
-  metaSection: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 12,
-    gap: 8,
-  },
-  categoryBadge: {
-    marginRight: 4,
-    marginBottom: 4,
-  },
-  tagBadge: {
-    marginRight: 4,
-    marginBottom: 4,
-  },
-  postMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  metaText: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  metaSeparator: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  contentCard: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    padding: 20,
-  },
-  actionsCard: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    padding: 16,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 8,
-  },
-  actionText: {
-    fontSize: 14,
-    color: TextSecondary,
-    fontWeight: '600',
-  },
-  actionTextActive: {
-    color: PrimaryBlue,
-  },
-  commentsCard: {
-    margin: 16,
-    marginBottom: 32,
-    padding: 20,
-  },
-  commentsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 16,
-  },
-  commentInputContainer: {
-    marginBottom: 24,
-  },
-  commentInput: {
-    marginBottom: 12,
-  },
-  commentButton: {
-    alignSelf: 'flex-end',
-  },
-  noComments: {
-    fontSize: 14,
-    color: TextSecondary,
-    textAlign: 'center',
-    padding: 24,
-  },
-  commentCard: {
-    marginBottom: 16,
-    padding: 16,
-  },
-  commentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  commentAuthorInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  commentAuthorName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginBottom: 2,
-  },
-  commentDate: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  commentContent: {
-    fontSize: 14,
-    color: TextPrimary,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  commentLikeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    alignSelf: 'flex-start',
-  },
-  commentLikeText: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  commentLikeTextActive: {
-    color: Colors.light.error,
-  },
-  repliesContainer: {
-    marginLeft: 32,
-    marginTop: 8,
-  },
-  replyCard: {
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: '#F8F9FA',
-  },
-  authorBioCard: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    padding: 20,
-  },
-  authorBioHeader: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  authorBioInfo: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  authorBioName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 4,
-  },
-  authorBioMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  authorBioMetaText: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  authorBioMetaSeparator: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  authorBioText: {
-    fontSize: 14,
-    color: TextPrimary,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  authorBioStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  authorBioStatText: {
-    fontSize: 12,
-    color: TextSecondary,
-    fontWeight: '600',
-  },
-  followButton: {
-    marginTop: 8,
-    width: '100%',
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: c.background,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: c.background,
+      padding: 32,
+    },
+    errorText: {
+      fontSize: 18,
+      color: c.textSecondary,
+      marginBottom: 24,
+    },
+    headerCard: {
+      margin: 16,
+      marginBottom: 8,
+      padding: 20,
+    },
+    backButton: {
+      marginBottom: 16,
+      padding: 4,
+    },
+    authorSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    authorInfo: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    authorName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 4,
+    },
+    authorMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    authorMetaText: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    authorMetaSeparator: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 16,
+      lineHeight: 36,
+    },
+    metaSection: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginBottom: 12,
+      gap: 8,
+    },
+    categoryBadge: {
+      marginRight: 4,
+      marginBottom: 4,
+    },
+    tagBadge: {
+      marginRight: 4,
+      marginBottom: 4,
+    },
+    postMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    metaText: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    metaSeparator: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    contentCard: {
+      marginHorizontal: 16,
+      marginBottom: 8,
+      padding: 20,
+    },
+    actionsCard: {
+      marginHorizontal: 16,
+      marginBottom: 8,
+      padding: 16,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'center',
+    },
+    actionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      padding: 8,
+    },
+    actionText: {
+      fontSize: 14,
+      color: c.textSecondary,
+      fontWeight: '600',
+    },
+    actionTextActive: {
+      color: c.primary,
+    },
+    commentsCard: {
+      margin: 16,
+      marginBottom: 32,
+      padding: 20,
+    },
+    commentsTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 16,
+    },
+    commentInputContainer: {
+      marginBottom: 24,
+    },
+    commentInput: {
+      marginBottom: 12,
+    },
+    commentButton: {
+      alignSelf: 'flex-end',
+    },
+    noComments: {
+      fontSize: 14,
+      color: c.textSecondary,
+      textAlign: 'center',
+      padding: 24,
+    },
+    commentCard: {
+      marginBottom: 16,
+      padding: 16,
+    },
+    commentHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    commentAuthorInfo: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    commentAuthorName: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 2,
+    },
+    commentDate: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    commentContent: {
+      fontSize: 14,
+      color: c.text,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    commentLikeButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      alignSelf: 'flex-start',
+    },
+    commentLikeText: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    commentLikeTextActive: {
+      color: c.error,
+    },
+    repliesContainer: {
+      marginLeft: 32,
+      marginTop: 8,
+    },
+    replyCard: {
+      marginBottom: 12,
+      padding: 12,
+      backgroundColor: c.subtle,
+    },
+    authorBioCard: {
+      marginHorizontal: 16,
+      marginBottom: 8,
+      padding: 20,
+    },
+    authorBioHeader: {
+      flexDirection: 'row',
+      marginBottom: 16,
+    },
+    authorBioInfo: {
+      marginLeft: 16,
+      flex: 1,
+    },
+    authorBioName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 4,
+    },
+    authorBioMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    authorBioMetaText: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    authorBioMetaSeparator: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    authorBioText: {
+      fontSize: 14,
+      color: c.text,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    authorBioStats: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    authorBioStatText: {
+      fontSize: 12,
+      color: c.textSecondary,
+      fontWeight: '600',
+    },
+    followButton: {
+      marginTop: 8,
+      width: '100%',
+    },
+  });

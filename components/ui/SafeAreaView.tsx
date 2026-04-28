@@ -1,8 +1,8 @@
 // SafeAreaView Wrapper Component
 import React, { ReactNode } from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BackgroundPrimary } from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
 
 interface SafeAreaViewProps {
   children: ReactNode;
@@ -16,6 +16,7 @@ export const SafeAreaView: React.FC<SafeAreaViewProps> = ({
   edges = ['top', 'bottom'],
 }) => {
   const insets = useSafeAreaInsets();
+  const c = useThemedColors();
 
   const paddingStyles: ViewStyle = {};
 
@@ -32,12 +33,9 @@ export const SafeAreaView: React.FC<SafeAreaViewProps> = ({
     paddingStyles.paddingRight = insets.right;
   }
 
-  return <View style={[styles.container, paddingStyles, style]}>{children}</View>;
+  return (
+    <View style={[{ flex: 1, backgroundColor: c.background }, paddingStyles, style]}>
+      {children}
+    </View>
+  );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-});

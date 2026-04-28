@@ -1,5 +1,5 @@
 // Feedback Screen
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,15 +20,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Toast } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  PrimaryBlue,
-  PrimaryIndigo,
-  Colors,
-  RadiusMedium,
-} from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
+import { PrimaryBlue, PrimaryIndigo, RadiusMedium, ThemeColors } from '@/constants/theme';
 import apiClient from '@/config/api';
 
 interface FeedbackType {
@@ -64,41 +57,42 @@ interface FeedbackResponse {
 
 const getFeedbackTypeIcon = (
   type: string,
+  c: ThemeColors,
 ): { name: keyof typeof Ionicons.glyphMap; color: string } => {
   switch (type) {
     case 'bug':
-      return { name: 'bug', color: Colors.light.error };
+      return { name: 'bug', color: c.error };
     case 'vulnerability':
-      return { name: 'shield', color: Colors.light.warning };
+      return { name: 'shield', color: c.warning };
     case 'feature':
-      return { name: 'bulb', color: Colors.light.warning };
+      return { name: 'bulb', color: c.warning };
     case 'improvement':
-      return { name: 'star', color: PrimaryBlue };
+      return { name: 'star', color: c.primary };
     case 'share_me_on_testimonials':
-      return { name: 'chatbubble', color: PrimaryIndigo };
+      return { name: 'chatbubble', color: c.indigo };
     default:
-      return { name: 'chatbubble-ellipses', color: TextSecondary };
+      return { name: 'chatbubble-ellipses', color: c.textSecondary };
   }
 };
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string, c: ThemeColors) => {
   switch (status) {
     case 'pending':
       return {
-        bg: Colors.light.warning + '20',
-        text: Colors.light.warning,
-        border: Colors.light.warning + '40',
+        bg: c.warning + '20',
+        text: c.warning,
+        border: c.warning + '40',
       };
     case 'in_review':
-      return { bg: PrimaryBlue + '20', text: PrimaryBlue, border: PrimaryBlue + '40' };
+      return { bg: c.primary + '20', text: c.primary, border: c.primary + '40' };
     case 'resolved':
       return {
-        bg: Colors.light.success + '20',
-        text: Colors.light.success,
-        border: Colors.light.success + '40',
+        bg: c.success + '20',
+        text: c.success,
+        border: c.success + '40',
       };
     default:
-      return { bg: TextSecondary + '20', text: TextSecondary, border: TextSecondary + '40' };
+      return { bg: c.textSecondary + '20', text: c.textSecondary, border: c.textSecondary + '40' };
   }
 };
 
@@ -124,6 +118,8 @@ const formatCountdown = (seconds: number): string => {
 };
 
 export default function FeedbackScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [feedbackTypes, setFeedbackTypes] = useState<FeedbackType[]>([]);
@@ -296,7 +292,7 @@ export default function FeedbackScreen() {
   const canSubmit = rateLimit?.can_submit && !loading && validate();
 
   const renderFeedbackTypeButton = (type: FeedbackType) => {
-    const icon = getFeedbackTypeIcon(type.value);
+    const icon = getFeedbackTypeIcon(type.value, c);
     const isSelected = selectedType === type.value;
 
     return (
@@ -319,8 +315,8 @@ export default function FeedbackScreen() {
   };
 
   const renderFeedbackCard = ({ item }: { item: Feedback }) => {
-    const icon = getFeedbackTypeIcon(item.feedback_type);
-    const statusColors = getStatusColor(item.status);
+    const icon = getFeedbackTypeIcon(item.feedback_type, c);
+    const statusColors = getStatusColor(item.status, c);
 
     return (
       <Card style={styles.feedbackCard}>
@@ -376,7 +372,7 @@ export default function FeedbackScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={TextPrimary} />
+            <Ionicons name="arrow-back" size={24} color={c.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Feedback</Text>
         </View>
@@ -385,7 +381,7 @@ export default function FeedbackScreen() {
         {rateLimit && !rateLimit.can_submit && countdown > 0 && (
           <Card style={styles.rateLimitBanner}>
             <View style={styles.rateLimitContent}>
-              <Ionicons name="time" size={20} color={Colors.light.warning} />
+              <Ionicons name="time" size={20} color={c.warning} />
               <Text style={styles.rateLimitText}>
                 You can submit another feedback in {formatCountdown(countdown)}
               </Text>
@@ -476,19 +472,19 @@ export default function FeedbackScreen() {
         <Card style={styles.guidelinesCard}>
           <Text style={styles.guidelinesTitle}>Guidelines</Text>
           <View style={styles.guidelineItem}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.light.success} />
+            <Ionicons name="checkmark-circle" size={20} color={c.success} />
             <Text style={styles.guidelineText}>Be specific and descriptive</Text>
           </View>
           <View style={styles.guidelineItem}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.light.success} />
+            <Ionicons name="checkmark-circle" size={20} color={c.success} />
             <Text style={styles.guidelineText}>Include steps to reproduce bugs</Text>
           </View>
           <View style={styles.guidelineItem}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.light.success} />
+            <Ionicons name="checkmark-circle" size={20} color={c.success} />
             <Text style={styles.guidelineText}>One feedback per submission</Text>
           </View>
           <View style={styles.guidelineItem}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.light.success} />
+            <Ionicons name="checkmark-circle" size={20} color={c.success} />
             <Text style={styles.guidelineText}>Rate limit: 1 feedback per 5 minutes</Text>
           </View>
         </Card>
@@ -506,11 +502,11 @@ export default function FeedbackScreen() {
 
           {loadingHistory && feedbacks.length === 0 ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={PrimaryBlue} />
+              <ActivityIndicator size="large" color={c.primary} />
             </View>
           ) : feedbacks.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="chatbubble-ellipses" size={64} color={TextSecondary} />
+              <Ionicons name="chatbubble-ellipses" size={64} color={c.textSecondary} />
               <Text style={styles.emptyTitle}>No feedback submitted yet</Text>
               <Text style={styles.emptySubtext}>Your feedback history will appear here</Text>
             </View>
@@ -522,7 +518,7 @@ export default function FeedbackScreen() {
               scrollEnabled={false}
               ListFooterComponent={
                 loadingHistory && feedbacks.length > 0 ? (
-                  <ActivityIndicator size="small" color={PrimaryBlue} style={styles.footerLoader} />
+                  <ActivityIndicator size="small" color={c.primary} style={styles.footerLoader} />
                 ) : null
               }
               onEndReached={handleLoadMore}
@@ -537,287 +533,288 @@ export default function FeedbackScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    paddingBottom: 8,
-  },
-  backButton: {
-    marginRight: 12,
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: TextPrimary,
-  },
-  rateLimitBanner: {
-    margin: 16,
-    marginTop: 8,
-    marginBottom: 8,
-    padding: 16,
-    backgroundColor: Colors.light.warning + '10',
-    borderColor: Colors.light.warning + '30',
-  },
-  rateLimitContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  rateLimitText: {
-    fontSize: 14,
-    color: TextPrimary,
-    flex: 1,
-    fontWeight: '600',
-  },
-  statsCard: {
-    margin: 16,
-    marginTop: 8,
-    borderRadius: RadiusMedium,
-    padding: 20,
-  },
-  statsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  statItem: {
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    opacity: 0.9,
-  },
-  formCard: {
-    margin: 16,
-    marginTop: 8,
-    padding: 20,
-  },
-  formTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 20,
-  },
-  typesContainer: {
-    marginBottom: 20,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginBottom: 12,
-  },
-  typesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  typeButton: {
-    flex: 1,
-    minWidth: '45%',
-    padding: 16,
-    borderRadius: RadiusMedium,
-    borderWidth: 2,
-    borderColor: Colors.light.border,
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FFFFFF',
-  },
-  typeButtonActive: {
-    borderColor: PrimaryBlue,
-    backgroundColor: PrimaryBlue + '10',
-  },
-  typeIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  typeButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: TextPrimary,
-    textAlign: 'center',
-  },
-  typeButtonTextActive: {
-    color: PrimaryBlue,
-  },
-  fieldContainer: {
-    marginBottom: 20,
-  },
-  charCount: {
-    fontSize: 12,
-    color: TextSecondary,
-    marginTop: 4,
-    textAlign: 'right',
-  },
-  messageInput: {
-    minHeight: 120,
-    textAlignVertical: 'top',
-  },
-  errorText: {
-    fontSize: 12,
-    color: Colors.light.error,
-    marginTop: 4,
-  },
-  submitButton: {
-    marginTop: 8,
-  },
-  guidelinesCard: {
-    margin: 16,
-    marginTop: 8,
-    padding: 20,
-  },
-  guidelinesTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 16,
-  },
-  guidelineItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  guidelineText: {
-    fontSize: 14,
-    color: TextPrimary,
-    flex: 1,
-  },
-  historyCard: {
-    margin: 16,
-    marginTop: 8,
-    padding: 20,
-  },
-  historyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  historyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-  },
-  historyCount: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  loadingContainer: {
-    padding: 32,
-    alignItems: 'center',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: TextSecondary,
-    textAlign: 'center',
-  },
-  feedbackCard: {
-    marginBottom: 16,
-    padding: 16,
-  },
-  feedbackHeader: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  feedbackIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  feedbackContent: {
-    flex: 1,
-  },
-  feedbackSubject: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 4,
-  },
-  feedbackMessage: {
-    fontSize: 14,
-    color: TextSecondary,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  feedbackMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  feedbackTime: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  feedbackSeparator: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  feedbackType: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  statusBadge: {
-    alignSelf: 'flex-start',
-  },
-  adminResponse: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: PrimaryBlue + '10',
-    borderRadius: RadiusMedium,
-    borderLeftWidth: 3,
-    borderLeftColor: PrimaryBlue,
-  },
-  adminResponseLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: PrimaryBlue,
-    marginBottom: 4,
-  },
-  adminResponseText: {
-    fontSize: 14,
-    color: TextPrimary,
-    lineHeight: 20,
-  },
-  footerLoader: {
-    marginVertical: 16,
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      paddingBottom: 8,
+    },
+    backButton: {
+      marginRight: 12,
+      padding: 4,
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: c.text,
+    },
+    rateLimitBanner: {
+      margin: 16,
+      marginTop: 8,
+      marginBottom: 8,
+      padding: 16,
+      backgroundColor: c.warning + '10',
+      borderColor: c.warning + '30',
+    },
+    rateLimitContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    rateLimitText: {
+      fontSize: 14,
+      color: c.text,
+      flex: 1,
+      fontWeight: '600',
+    },
+    statsCard: {
+      margin: 16,
+      marginTop: 8,
+      borderRadius: RadiusMedium,
+      padding: 20,
+    },
+    statsTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+      marginBottom: 16,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      gap: 16,
+    },
+    statItem: {
+      flex: 1,
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+      marginBottom: 4,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: '#FFFFFF',
+      opacity: 0.9,
+    },
+    formCard: {
+      margin: 16,
+      marginTop: 8,
+      padding: 20,
+    },
+    formTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 20,
+    },
+    typesContainer: {
+      marginBottom: 20,
+    },
+    fieldLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 12,
+    },
+    typesGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    typeButton: {
+      flex: 1,
+      minWidth: '45%',
+      padding: 16,
+      borderRadius: RadiusMedium,
+      borderWidth: 2,
+      borderColor: c.border,
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: c.card,
+    },
+    typeButtonActive: {
+      borderColor: c.primary,
+      backgroundColor: c.primaryTint,
+    },
+    typeIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    typeButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.text,
+      textAlign: 'center',
+    },
+    typeButtonTextActive: {
+      color: c.primary,
+    },
+    fieldContainer: {
+      marginBottom: 20,
+    },
+    charCount: {
+      fontSize: 12,
+      color: c.textSecondary,
+      marginTop: 4,
+      textAlign: 'right',
+    },
+    messageInput: {
+      minHeight: 120,
+      textAlignVertical: 'top',
+    },
+    errorText: {
+      fontSize: 12,
+      color: c.error,
+      marginTop: 4,
+    },
+    submitButton: {
+      marginTop: 8,
+    },
+    guidelinesCard: {
+      margin: 16,
+      marginTop: 8,
+      padding: 20,
+    },
+    guidelinesTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 16,
+    },
+    guidelineItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 12,
+    },
+    guidelineText: {
+      fontSize: 14,
+      color: c.text,
+      flex: 1,
+    },
+    historyCard: {
+      margin: 16,
+      marginTop: 8,
+      padding: 20,
+    },
+    historyHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    historyTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+    },
+    historyCount: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    loadingContainer: {
+      padding: 32,
+      alignItems: 'center',
+    },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: c.textSecondary,
+      textAlign: 'center',
+    },
+    feedbackCard: {
+      marginBottom: 16,
+      padding: 16,
+    },
+    feedbackHeader: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    feedbackIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    feedbackContent: {
+      flex: 1,
+    },
+    feedbackSubject: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 4,
+    },
+    feedbackMessage: {
+      fontSize: 14,
+      color: c.textSecondary,
+      marginBottom: 8,
+      lineHeight: 20,
+    },
+    feedbackMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    feedbackTime: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    feedbackSeparator: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    feedbackType: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    statusBadge: {
+      alignSelf: 'flex-start',
+    },
+    adminResponse: {
+      marginTop: 16,
+      padding: 12,
+      backgroundColor: c.primaryTint,
+      borderRadius: RadiusMedium,
+      borderLeftWidth: 3,
+      borderLeftColor: c.primary,
+    },
+    adminResponseLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.primary,
+      marginBottom: 4,
+    },
+    adminResponseText: {
+      fontSize: 14,
+      color: c.text,
+      lineHeight: 20,
+    },
+    footerLoader: {
+      marginVertical: 16,
+    },
+  });

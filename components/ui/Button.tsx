@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   TouchableOpacity,
   Text,
@@ -7,7 +7,8 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Colors, PrimaryBlue, RadiusMedium } from '@/constants/theme';
+import { RadiusMedium, ThemeColors } from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
 
 interface ButtonProps {
   title: string;
@@ -28,6 +29,9 @@ export const Button: React.FC<ButtonProps> = ({
   loading = false,
   style,
 }) => {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
+
   const buttonStyle: ViewStyle[] = [
     styles.button,
     styles[`button_${size}`],
@@ -49,7 +53,7 @@ export const Button: React.FC<ButtonProps> = ({
     disabled && styles.textDisabled,
   ].filter(Boolean) as TextStyle[];
 
-  const spinnerColor = variant === 'outline' || variant === 'ghost' ? PrimaryBlue : '#FFFFFF';
+  const spinnerColor = variant === 'outline' || variant === 'ghost' ? c.primary : '#FFFFFF';
 
   return (
     <TouchableOpacity
@@ -69,71 +73,72 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: RadiusMedium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  button_sm: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    minHeight: 36,
-  },
-  button_md: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    minHeight: 44,
-  },
-  button_lg: {
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    minHeight: 50,
-  },
-  buttonPrimary: {
-    backgroundColor: PrimaryBlue,
-  },
-  buttonSecondary: {
-    backgroundColor: Colors.light.subtle,
-  },
-  buttonOutline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: Colors.light.border,
-  },
-  buttonGhost: {
-    backgroundColor: 'transparent',
-  },
-  buttonDisabled: {
-    opacity: 0.45,
-  },
-  text: {
-    fontWeight: '600',
-    textAlign: 'center',
-    letterSpacing: 0.1,
-  },
-  text_sm: {
-    fontSize: 13,
-  },
-  text_md: {
-    fontSize: 15,
-  },
-  text_lg: {
-    fontSize: 16,
-  },
-  textPrimary: {
-    color: '#FFFFFF',
-  },
-  textSecondary: {
-    color: Colors.light.text,
-  },
-  textOutline: {
-    color: Colors.light.text,
-  },
-  textGhost: {
-    color: PrimaryBlue,
-  },
-  textDisabled: {
-    opacity: 0.6,
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    button: {
+      borderRadius: RadiusMedium,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    button_sm: {
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      minHeight: 36,
+    },
+    button_md: {
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      minHeight: 44,
+    },
+    button_lg: {
+      paddingVertical: 14,
+      paddingHorizontal: 28,
+      minHeight: 50,
+    },
+    buttonPrimary: {
+      backgroundColor: c.primary,
+    },
+    buttonSecondary: {
+      backgroundColor: c.subtle,
+    },
+    buttonOutline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: c.border,
+    },
+    buttonGhost: {
+      backgroundColor: 'transparent',
+    },
+    buttonDisabled: {
+      opacity: 0.45,
+    },
+    text: {
+      fontWeight: '600',
+      textAlign: 'center',
+      letterSpacing: 0.1,
+    },
+    text_sm: {
+      fontSize: 13,
+    },
+    text_md: {
+      fontSize: 15,
+    },
+    text_lg: {
+      fontSize: 16,
+    },
+    textPrimary: {
+      color: '#FFFFFF',
+    },
+    textSecondary: {
+      color: c.text,
+    },
+    textOutline: {
+      color: c.text,
+    },
+    textGhost: {
+      color: c.primary,
+    },
+    textDisabled: {
+      opacity: 0.6,
+    },
+  });

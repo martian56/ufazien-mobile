@@ -1,5 +1,5 @@
 // GPA Calculator Screen
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,17 +19,8 @@ import { Picker } from '@/components/ui/Picker';
 import { Toast } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  TextTertiary,
-  PrimaryBlue,
-  PrimaryPurple,
-  Colors,
-  RadiusMedium,
-  RadiusFull,
-} from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
+import { RadiusMedium, RadiusFull, ThemeColors } from '@/constants/theme';
 import {
   convertUFAZToGPA,
   convertAzerbaijanToGPA,
@@ -72,6 +63,8 @@ interface GPAResult {
 }
 
 export default function GPACalculatorScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<'semester' | 'yearly' | 'history'>('semester');
@@ -84,9 +77,7 @@ export default function GPACalculatorScreen() {
   const [gpaResult, setGpaResult] = useState<GPAResult | null>(null);
   const [statistics, setStatistics] = useState<GPAStatistics | null>(null);
   const [savedCalculations, setSavedCalculations] = useState<SavedCalculation[]>([]);
-  // loading state is written by loadInputState but not read in the UI
   const [, setLoading] = useState(false);
-  // refreshing is used by RefreshControl; setter isn't needed since loadInputState manages loading
   const [refreshing] = useState(false);
   const [inputSaving, setInputSaving] = useState(false);
   const [gpaSaving, setGpaSaving] = useState(false);
@@ -97,14 +88,12 @@ export default function GPACalculatorScreen() {
   const inputSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gpaSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load initial state
   useEffect(() => {
     loadInputState();
     loadStatistics();
     loadSavedCalculations();
   }, []);
 
-  // Set initial load flag to false after delay
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsInitialLoad(false);
@@ -112,22 +101,18 @@ export default function GPACalculatorScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Calculate GPA when averages change
   useEffect(() => {
     calculateCurrentGPA();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [semesterAverages, yearlyAverages, activeTab]);
 
-  // Auto-save input state with debounce
   useEffect(() => {
     if (isInitialLoad) return;
 
-    // Clear existing timer
     if (inputSaveTimerRef.current) {
       clearTimeout(inputSaveTimerRef.current);
     }
 
-    // Set new timer
     inputSaveTimerRef.current = setTimeout(() => {
       saveInputState();
     }, 3000);
@@ -140,18 +125,15 @@ export default function GPACalculatorScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [semesterAverages, yearlyAverages, activeTab, isInitialLoad]);
 
-  // Auto-save GPA with debounce
   useEffect(() => {
     if (isInitialLoad || !gpaResult || gpaResult.totalPeriods === 0 || gpaResult.gpa === 0) {
       return;
     }
 
-    // Clear existing timer
     if (gpaSaveTimerRef.current) {
       clearTimeout(gpaSaveTimerRef.current);
     }
 
-    // Set new timer
     gpaSaveTimerRef.current = setTimeout(() => {
       saveGPA();
     }, 2000);
@@ -187,7 +169,6 @@ export default function GPACalculatorScreen() {
             })),
           );
         } else {
-          // Ensure we always have at least one empty entry
           setSemesterAverages([{ id: Date.now(), period: '', average: '', gradeType: 'ufaz' }]);
         }
         if (data.yearly_data && Array.isArray(data.yearly_data) && data.yearly_data.length > 0) {
@@ -200,11 +181,9 @@ export default function GPACalculatorScreen() {
             })),
           );
         } else {
-          // Ensure we always have at least one empty entry
           setYearlyAverages([{ id: Date.now(), period: '', average: '', gradeType: 'ufaz' }]);
         }
       } else {
-        // No saved data, ensure we have at least one empty entry
         setSemesterAverages([{ id: Date.now(), period: '', average: '', gradeType: 'ufaz' }]);
         setYearlyAverages([{ id: Date.now(), period: '', average: '', gradeType: 'ufaz' }]);
       }
@@ -212,7 +191,6 @@ export default function GPACalculatorScreen() {
       if (error.response?.status !== 404) {
         console.error('Error loading input state:', error);
       }
-      // On error, ensure we have at least one empty entry (initial state will be kept)
     } finally {
       setLoading(false);
     }
@@ -240,7 +218,6 @@ export default function GPACalculatorScreen() {
   const calculateCurrentGPA = () => {
     const currentAverages = activeTab === 'semester' ? semesterAverages : yearlyAverages;
 
-    // Filter valid averages (must have both period and average)
     const validAverages = currentAverages.filter(
       (avg) => avg.period && avg.period.trim() && avg.average && avg.average.trim(),
     );
@@ -310,7 +287,6 @@ export default function GPACalculatorScreen() {
       });
     } catch (error: any) {
       console.error('Error saving input state:', error);
-      // Don't show error toast for auto-save failures
     } finally {
       setInputSaving(false);
     }
@@ -321,16 +297,13 @@ export default function GPACalculatorScreen() {
       return;
     }
 
-    // Validate GPA is within valid range (0-4.0)
     if (gpaResult.gpa < 0 || gpaResult.gpa > 4.0) {
       console.error('Invalid GPA value:', gpaResult.gpa);
       return;
     }
 
-    // Get current averages based on active tab
     const currentAverages = activeTab === 'semester' ? semesterAverages : yearlyAverages;
 
-    // Filter valid averages (must have both period and average)
     const validAverages = currentAverages.filter(
       (avg) => avg.period && avg.period.trim() && avg.average && avg.average.trim(),
     );
@@ -341,12 +314,11 @@ export default function GPACalculatorScreen() {
 
     setGpaSaving(true);
     try {
-      // Ensure GPA is a number, not a string, and round to 3 decimal places
       const gpaValue = parseFloat(gpaResult.gpa.toFixed(3));
 
       const response = await apiClient.post('/gpa/update-user-gpa/', {
         gpa: gpaValue,
-        period_type: activeTab, // 'semester' or 'yearly'
+        period_type: activeTab,
         period_averages: validAverages.map((avg) => ({
           period: avg.period,
           average: parseFloat(avg.average),
@@ -358,14 +330,12 @@ export default function GPACalculatorScreen() {
       console.error('Error saving GPA:', error);
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
-      // Log the request payload for debugging
       console.error('Request payload:', {
         gpa: gpaResult.gpa,
         period_type: activeTab,
         period_averages: currentAverages,
       });
 
-      // Show error to user if it's a client error (400-499)
       if (error.response?.status >= 400 && error.response?.status < 500) {
         const errorMessage =
           error.response?.data?.detail ||
@@ -381,7 +351,6 @@ export default function GPACalculatorScreen() {
 
   const handleTabChange = (tab: 'semester' | 'yearly' | 'history') => {
     setActiveTab(tab);
-    // Save immediately on tab change (no debounce)
     if (!isInitialLoad) {
       saveInputState();
     }
@@ -505,7 +474,7 @@ export default function GPACalculatorScreen() {
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>UFAZ Grade Scale</Text>
             <TouchableOpacity onPress={() => setShowConversionModal(false)}>
-              <Ionicons name="close" size={24} color={TextPrimary} />
+              <Ionicons name="close" size={24} color={c.text} />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.conversionTable}>
@@ -553,7 +522,6 @@ export default function GPACalculatorScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header + Tabs */}
       <View style={[styles.headerBar, { paddingTop: insets.top + 8 }]}>
         <Text style={styles.screenTitle}>GPA Calculator</Text>
         <View style={styles.tabs}>
@@ -578,10 +546,15 @@ export default function GPACalculatorScreen() {
       {activeTab !== 'history' && (
         <ScrollView
           style={styles.scrollView}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadInputState} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={loadInputState}
+              tintColor={c.primary}
+            />
+          }
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         >
-          {/* Header */}
           <Card style={styles.headerCard}>
             <View style={styles.headerRow}>
               <View style={styles.headerLeft}>
@@ -593,29 +566,25 @@ export default function GPACalculatorScreen() {
               <View style={styles.headerRight}>
                 {(inputSaving || gpaSaving) && (
                   <View style={styles.savingIndicator}>
-                    <ActivityIndicator
-                      size="small"
-                      color={inputSaving ? Colors.light.success : PrimaryBlue}
-                    />
+                    <ActivityIndicator size="small" color={inputSaving ? c.success : c.primary} />
                     <Text style={styles.savingText}>
                       {inputSaving ? 'Saving inputs...' : 'Saving GPA...'}
                     </Text>
                   </View>
                 )}
                 <TouchableOpacity onPress={resetCalculator} style={styles.resetButton}>
-                  <Ionicons name="refresh" size={20} color={TextSecondary} />
+                  <Ionicons name="refresh" size={20} color={c.textSecondary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setShowConversionModal(true)}
                   style={styles.scaleButton}
                 >
-                  <Ionicons name="information-circle" size={20} color={PrimaryBlue} />
+                  <Ionicons name="information-circle" size={20} color={c.primary} />
                 </TouchableOpacity>
               </View>
             </View>
           </Card>
 
-          {/* Results Section */}
           {gpaResult && (
             <Card style={styles.resultsCard}>
               <Text style={styles.resultsTitle}>GPA Results</Text>
@@ -647,7 +616,7 @@ export default function GPACalculatorScreen() {
                 </View>
                 <View style={styles.statBox}>
                   <Text style={styles.statLabel}>Azerbaijan Scale</Text>
-                  <Text style={[styles.statValue, { color: Colors.light.success }]}>
+                  <Text style={[styles.statValue, { color: c.success }]}>
                     {gpaResult.azerbaijanGrade}/100
                   </Text>
                 </View>
@@ -670,24 +639,23 @@ export default function GPACalculatorScreen() {
                       Current GPA: {user.gpa.toFixed(3)} → New GPA: {gpaResult.gpa.toFixed(3)}
                     </Text>
                     {gpaResult.gpa > user.gpa && (
-                      <Ionicons name="arrow-up" size={20} color={Colors.light.success} />
+                      <Ionicons name="arrow-up" size={20} color={c.success} />
                     )}
                     {gpaResult.gpa < user.gpa && (
-                      <Ionicons name="arrow-down" size={20} color={Colors.light.error} />
+                      <Ionicons name="arrow-down" size={20} color={c.error} />
                     )}
                   </Card>
                 )}
             </Card>
           )}
 
-          {/* Averages Section */}
           <Card style={styles.averagesCard}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
                 {activeTab === 'semester' ? 'Semester' : 'Yearly'} Averages
               </Text>
               <TouchableOpacity onPress={addAverage} style={styles.addButton}>
-                <Ionicons name="add-circle" size={24} color={PrimaryBlue} />
+                <Ionicons name="add-circle" size={24} color={c.primary} />
               </TouchableOpacity>
             </View>
 
@@ -702,7 +670,7 @@ export default function GPACalculatorScreen() {
                         onPress={() => removeAverage(average.id)}
                         style={styles.removeButton}
                       >
-                        <Ionicons name="trash" size={20} color={Colors.light.error} />
+                        <Ionicons name="trash" size={20} color={c.error} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -734,7 +702,6 @@ export default function GPACalculatorScreen() {
                     placeholder={getPlaceholder(average.gradeType)}
                     value={average.average}
                     onChangeText={(text) => {
-                      // Validate input based on grade type
                       const num = parseFloat(text);
                       if (text === '' || (!isNaN(num) && num >= min && num <= max)) {
                         updateAverage(average.id, 'average', text);
@@ -747,9 +714,8 @@ export default function GPACalculatorScreen() {
               );
             })}
 
-            {/* Add Average Button */}
             <TouchableOpacity onPress={addAverage} style={styles.addAverageButton}>
-              <Ionicons name="add" size={20} color={PrimaryBlue} />
+              <Ionicons name="add" size={20} color={c.primary} />
               <Text style={styles.addAverageText}>
                 Add {activeTab === 'semester' ? 'Semester' : 'Year'}
               </Text>
@@ -761,14 +727,19 @@ export default function GPACalculatorScreen() {
       {activeTab === 'history' && (
         <ScrollView
           style={styles.scrollView}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadStatistics} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={loadStatistics}
+              tintColor={c.primary}
+            />
+          }
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         >
-          {/* Statistics Cards */}
           {statistics && (
             <View style={styles.statsContainer}>
               <Card style={[styles.statCard, styles.statCardGreen]}>
-                <Ionicons name="trophy" size={32} color={Colors.light.success} />
+                <Ionicons name="trophy" size={32} color={c.success} />
                 <Text style={styles.statCardValue}>
                   {statistics.highest_gpa?.toFixed(3) || '0.000'}
                 </Text>
@@ -776,7 +747,7 @@ export default function GPACalculatorScreen() {
               </Card>
 
               <Card style={[styles.statCard, styles.statCardBlue]}>
-                <Ionicons name="bar-chart" size={32} color={PrimaryBlue} />
+                <Ionicons name="bar-chart" size={32} color={c.primary} />
                 <Text style={styles.statCardValue}>
                   {statistics.average_gpa?.toFixed(3) || '0.000'}
                 </Text>
@@ -784,7 +755,7 @@ export default function GPACalculatorScreen() {
               </Card>
 
               <Card style={[styles.statCard, styles.statCardPurple]}>
-                <Ionicons name="calculator" size={32} color={PrimaryPurple} />
+                <Ionicons name="calculator" size={32} color={c.purple} />
                 <Text style={styles.statCardValue}>
                   {statistics.total_calculations || statistics.total_periods || 0}
                 </Text>
@@ -793,7 +764,6 @@ export default function GPACalculatorScreen() {
             </View>
           )}
 
-          {/* Saved Calculations */}
           <Card style={styles.calculationsCard}>
             <Text style={styles.calculationsTitle}>Saved Calculations</Text>
             {savedCalculations.length === 0 ? (
@@ -826,351 +796,352 @@ export default function GPACalculatorScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  headerBar: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.borderSubtle,
-  },
-  screenTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 12,
-    letterSpacing: -0.3,
-  },
-  tabs: {
-    flexDirection: 'row',
-    gap: 4,
-    marginBottom: 10,
-  },
-  tab: {
-    paddingVertical: 7,
-    paddingHorizontal: 16,
-    borderRadius: RadiusFull,
-  },
-  tabActive: {
-    backgroundColor: '#E8EDFB',
-  },
-  tabText: {
-    fontSize: 13,
-    color: TextSecondary,
-    fontWeight: '600',
-  },
-  tabTextActive: {
-    color: PrimaryBlue,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  headerCard: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 8,
-    padding: 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  savingIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  savingText: {
-    fontSize: 11,
-    color: TextTertiary,
-  },
-  resetButton: {
-    padding: 6,
-  },
-  scaleButton: {
-    padding: 6,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 3,
-    letterSpacing: -0.2,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: TextSecondary,
-  },
-  resultsCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    padding: 20,
-  },
-  resultsTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: TextSecondary,
-    marginBottom: 12,
-    textAlign: 'center',
-    letterSpacing: 0.1,
-  },
-  gpaDisplay: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  gpaValue: {
-    fontSize: 44,
-    fontWeight: '700',
-    color: PrimaryBlue,
-    marginBottom: 8,
-    letterSpacing: -1,
-  },
-  statusBadge: {
-    marginBottom: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-  },
-  letterGrade: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: TextSecondary,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 12,
-  },
-  statBox: {
-    flex: 1,
-    minWidth: '45%',
-    padding: 12,
-    backgroundColor: Colors.light.subtle,
-    borderRadius: RadiusMedium,
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 11,
-    color: TextSecondary,
-    marginBottom: 3,
-    fontWeight: '500',
-  },
-  statValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: TextPrimary,
-  },
-  comparisonCard: {
-    marginTop: 14,
-    padding: 12,
-    backgroundColor: '#FEF3C7',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  comparisonText: {
-    fontSize: 13,
-    color: TextPrimary,
-    fontWeight: '600',
-  },
-  averagesCard: {
-    margin: 16,
-    marginTop: 4,
-    padding: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: TextPrimary,
-    letterSpacing: -0.1,
-  },
-  addButton: {
-    padding: 4,
-  },
-  averageRow: {
-    marginBottom: 12,
-    padding: 14,
-    backgroundColor: Colors.light.subtle,
-    borderWidth: 0,
-  },
-  averageRowHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  averageNumber: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: TextSecondary,
-  },
-  removeButton: {
-    padding: 4,
-  },
-  input: {
-    marginBottom: 10,
-  },
-  addAverageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: Colors.light.border,
-    borderRadius: RadiusMedium,
-    gap: 6,
-    marginTop: 4,
-  },
-  addAverageText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: PrimaryBlue,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 16,
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '45%',
-    padding: 18,
-    alignItems: 'center',
-  },
-  statCardGreen: {
-    backgroundColor: '#D1FAE5',
-  },
-  statCardBlue: {
-    backgroundColor: '#E8EDFB',
-  },
-  statCardPurple: {
-    backgroundColor: '#EDE9FE',
-  },
-  statCardValue: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginTop: 8,
-    marginBottom: 3,
-  },
-  statCardLabel: {
-    fontSize: 13,
-    color: TextSecondary,
-    fontWeight: '500',
-  },
-  calculationsCard: {
-    margin: 16,
-    padding: 20,
-  },
-  calculationsTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 14,
-    letterSpacing: -0.1,
-  },
-  calculationItem: {
-    marginBottom: 10,
-    padding: 14,
-    backgroundColor: Colors.light.subtle,
-    borderWidth: 0,
-  },
-  calculationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  calculationName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginBottom: 3,
-  },
-  calculationType: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  calculationGPA: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: PrimaryBlue,
-  },
-  emptyState: {
-    padding: 32,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    maxHeight: '80%',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.borderSubtle,
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: TextPrimary,
-  },
-  conversionTable: {
-    padding: 16,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    paddingBottom: 10,
-    borderBottomWidth: 1.5,
-    borderBottomColor: Colors.light.border,
-    marginBottom: 6,
-  },
-  tableRow: {
-    flexDirection: 'row',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.borderSubtle,
-  },
-  tableCell: {
-    fontSize: 12,
-    color: TextPrimary,
-    paddingHorizontal: 4,
-  },
-  tableHeaderText: {
-    fontWeight: '600',
-    color: TextSecondary,
-    fontSize: 11,
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    headerBar: {
+      backgroundColor: c.card,
+      paddingHorizontal: 20,
+      paddingBottom: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: c.borderSubtle,
+    },
+    screenTitle: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 12,
+      letterSpacing: -0.3,
+    },
+    tabs: {
+      flexDirection: 'row',
+      gap: 4,
+      marginBottom: 10,
+    },
+    tab: {
+      paddingVertical: 7,
+      paddingHorizontal: 16,
+      borderRadius: RadiusFull,
+    },
+    tabActive: {
+      backgroundColor: c.primaryTint,
+    },
+    tabText: {
+      fontSize: 13,
+      color: c.textSecondary,
+      fontWeight: '600',
+    },
+    tabTextActive: {
+      color: c.primary,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    headerCard: {
+      marginHorizontal: 16,
+      marginTop: 12,
+      marginBottom: 8,
+      padding: 16,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    headerLeft: {
+      flex: 1,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    savingIndicator: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    savingText: {
+      fontSize: 11,
+      color: c.textTertiary,
+    },
+    resetButton: {
+      padding: 6,
+    },
+    scaleButton: {
+      padding: 6,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 3,
+      letterSpacing: -0.2,
+    },
+    subtitle: {
+      fontSize: 13,
+      color: c.textSecondary,
+    },
+    resultsCard: {
+      marginHorizontal: 16,
+      marginBottom: 12,
+      padding: 20,
+    },
+    resultsTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.textSecondary,
+      marginBottom: 12,
+      textAlign: 'center',
+      letterSpacing: 0.1,
+    },
+    gpaDisplay: {
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    gpaValue: {
+      fontSize: 44,
+      fontWeight: '700',
+      color: c.primary,
+      marginBottom: 8,
+      letterSpacing: -1,
+    },
+    statusBadge: {
+      marginBottom: 6,
+      paddingHorizontal: 14,
+      paddingVertical: 4,
+    },
+    letterGrade: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.textSecondary,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginTop: 12,
+    },
+    statBox: {
+      flex: 1,
+      minWidth: '45%',
+      padding: 12,
+      backgroundColor: c.subtle,
+      borderRadius: RadiusMedium,
+      alignItems: 'center',
+    },
+    statLabel: {
+      fontSize: 11,
+      color: c.textSecondary,
+      marginBottom: 3,
+      fontWeight: '500',
+    },
+    statValue: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: c.text,
+    },
+    comparisonCard: {
+      marginTop: 14,
+      padding: 12,
+      backgroundColor: c.warningTint,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    comparisonText: {
+      fontSize: 13,
+      color: c.text,
+      fontWeight: '600',
+    },
+    averagesCard: {
+      margin: 16,
+      marginTop: 4,
+      padding: 20,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 14,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+      letterSpacing: -0.1,
+    },
+    addButton: {
+      padding: 4,
+    },
+    averageRow: {
+      marginBottom: 12,
+      padding: 14,
+      backgroundColor: c.subtle,
+      borderWidth: 0,
+    },
+    averageRowHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    averageNumber: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: c.textSecondary,
+    },
+    removeButton: {
+      padding: 4,
+    },
+    input: {
+      marginBottom: 10,
+    },
+    addAverageButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 14,
+      borderWidth: 1.5,
+      borderStyle: 'dashed',
+      borderColor: c.border,
+      borderRadius: RadiusMedium,
+      gap: 6,
+      marginTop: 4,
+    },
+    addAverageText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.primary,
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      padding: 16,
+      gap: 10,
+    },
+    statCard: {
+      flex: 1,
+      minWidth: '45%',
+      padding: 18,
+      alignItems: 'center',
+    },
+    statCardGreen: {
+      backgroundColor: c.successTint,
+    },
+    statCardBlue: {
+      backgroundColor: c.primaryTint,
+    },
+    statCardPurple: {
+      backgroundColor: c.purpleTint,
+    },
+    statCardValue: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: c.text,
+      marginTop: 8,
+      marginBottom: 3,
+    },
+    statCardLabel: {
+      fontSize: 13,
+      color: c.textSecondary,
+      fontWeight: '500',
+    },
+    calculationsCard: {
+      margin: 16,
+      padding: 20,
+    },
+    calculationsTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 14,
+      letterSpacing: -0.1,
+    },
+    calculationItem: {
+      marginBottom: 10,
+      padding: 14,
+      backgroundColor: c.subtle,
+      borderWidth: 0,
+    },
+    calculationHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    calculationName: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 3,
+    },
+    calculationType: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    calculationGPA: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: c.primary,
+    },
+    emptyState: {
+      padding: 32,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: c.overlay,
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      maxHeight: '80%',
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: c.borderSubtle,
+    },
+    modalTitle: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: c.text,
+    },
+    conversionTable: {
+      padding: 16,
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      paddingBottom: 10,
+      borderBottomWidth: 1.5,
+      borderBottomColor: c.border,
+      marginBottom: 6,
+    },
+    tableRow: {
+      flexDirection: 'row',
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: c.borderSubtle,
+    },
+    tableCell: {
+      fontSize: 12,
+      color: c.text,
+      paddingHorizontal: 4,
+    },
+    tableHeaderText: {
+      fontWeight: '600',
+      color: c.textSecondary,
+      fontSize: 11,
+    },
+  });

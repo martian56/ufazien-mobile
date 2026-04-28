@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Switch as RNSwitch, View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { PrimaryBlue, TextPrimary, TextSecondary, BorderDefault } from '@/constants/theme';
+import { ThemeColors } from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
 
 interface SwitchProps {
   value: boolean;
@@ -19,6 +20,8 @@ export const Switch: React.FC<SwitchProps> = ({
   disabled = false,
   style,
 }) => {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   return (
     <View style={[styles.container, style]}>
       {(label || description) && (
@@ -35,40 +38,41 @@ export const Switch: React.FC<SwitchProps> = ({
         value={value}
         onValueChange={onValueChange}
         disabled={disabled}
-        trackColor={{ false: BorderDefault, true: PrimaryBlue }}
+        trackColor={{ false: c.border, true: c.primary }}
         thumbColor={'#FFFFFF'}
-        ios_backgroundColor={BorderDefault}
+        ios_backgroundColor={c.border}
       />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-  },
-  textContainer: {
-    flex: 1,
-    marginRight: 16,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginBottom: 2,
-  },
-  labelDisabled: {
-    opacity: 0.5,
-  },
-  description: {
-    fontSize: 13,
-    color: TextSecondary,
-    lineHeight: 18,
-  },
-  descriptionDisabled: {
-    opacity: 0.5,
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+    },
+    textContainer: {
+      flex: 1,
+      marginRight: 16,
+    },
+    label: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 2,
+    },
+    labelDisabled: {
+      opacity: 0.5,
+    },
+    description: {
+      fontSize: 13,
+      color: c.textSecondary,
+      lineHeight: 18,
+    },
+    descriptionDisabled: {
+      opacity: 0.5,
+    },
+  });

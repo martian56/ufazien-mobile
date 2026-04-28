@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,18 +12,11 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import { useThemedColors } from '@/contexts/ThemeContext';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
-import {
-  Colors,
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  TextTertiary,
-  PrimaryBlue,
-  ShadowMedium,
-} from '@/constants/theme';
+import { ShadowMedium, ThemeColors } from '@/constants/theme';
 import { formatYearWithOrdinal, getMajorDisplayName } from '@/utils/majorUtils';
 import apiClient from '@/config/api';
 
@@ -35,6 +28,8 @@ interface Notification {
 }
 
 export default function DashboardScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const { user, refreshUser } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -76,7 +71,7 @@ export default function DashboardScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={PrimaryBlue} />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -85,7 +80,9 @@ export default function DashboardScreen() {
     <ScrollView
       style={styles.container}
       contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 32 }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />
+      }
       showsVerticalScrollIndicator={false}
     >
       {/* Greeting + Avatar */}
@@ -112,7 +109,7 @@ export default function DashboardScreen() {
                 user?.major ? getMajorDisplayName(user.major) : null,
               ]
                 .filter(Boolean)
-                .join(' \u00B7 ') || 'Undeclared'}
+                .join(' · ') || 'Undeclared'}
             </Text>
           </View>
         </View>
@@ -202,10 +199,12 @@ function ActionTile({
   label: string;
   onPress: () => void;
 }) {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   return (
     <TouchableOpacity style={styles.actionTile} onPress={onPress} activeOpacity={0.6}>
       <View style={styles.actionIcon}>
-        <Ionicons name={icon as any} size={22} color={PrimaryBlue} />
+        <Ionicons name={icon as any} size={22} color={c.primary} />
       </View>
       <Text style={styles.actionLabel}>{label}</Text>
     </TouchableOpacity>
@@ -233,177 +232,178 @@ function formatRelativeDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString();
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: BackgroundPrimary,
-  },
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: c.background,
+    },
 
-  // Header
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  greeting: {
-    flex: 1,
-    marginRight: 16,
-  },
-  greetingText: {
-    fontSize: 14,
-    color: TextSecondary,
-    marginBottom: 2,
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: TextPrimary,
-    letterSpacing: -0.3,
-  },
+    // Header
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      marginBottom: 20,
+    },
+    greeting: {
+      flex: 1,
+      marginRight: 16,
+    },
+    greetingText: {
+      fontSize: 14,
+      color: c.textSecondary,
+      marginBottom: 2,
+    },
+    userName: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: c.text,
+      letterSpacing: -0.3,
+    },
 
-  // Profile Card
-  profileCard: {
-    marginHorizontal: 20,
-    marginBottom: 24,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.light.borderSubtle,
-    ...ShadowMedium,
-  },
-  profileTop: {
-    marginBottom: 20,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 3,
-    letterSpacing: -0.2,
-  },
-  profileDetail: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.subtle,
-    borderRadius: 12,
-    paddingVertical: 14,
-  },
-  stat: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: TextSecondary,
-    fontWeight: '500',
-  },
-  statDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: Colors.light.border,
-  },
+    // Profile Card
+    profileCard: {
+      marginHorizontal: 20,
+      marginBottom: 24,
+      backgroundColor: c.cardElevated,
+      borderRadius: 16,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: c.borderSubtle,
+      ...ShadowMedium,
+    },
+    profileTop: {
+      marginBottom: 20,
+    },
+    profileName: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 3,
+      letterSpacing: -0.2,
+    },
+    profileDetail: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.subtle,
+      borderRadius: 12,
+      paddingVertical: 14,
+    },
+    stat: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 2,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: c.textSecondary,
+      fontWeight: '500',
+    },
+    statDivider: {
+      width: 1,
+      height: 28,
+      backgroundColor: c.border,
+    },
 
-  // Actions
-  sectionLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: TextSecondary,
-    paddingHorizontal: 20,
-    marginBottom: 12,
-    letterSpacing: 0.1,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 28,
-  },
-  actionTile: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.borderSubtle,
-  },
-  actionIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#E8EDFB',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  actionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: TextPrimary,
-  },
+    // Actions
+    sectionLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.textSecondary,
+      paddingHorizontal: 20,
+      marginBottom: 12,
+      letterSpacing: 0.1,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      marginBottom: 12,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      gap: 12,
+      marginBottom: 28,
+    },
+    actionTile: {
+      flex: 1,
+      alignItems: 'center',
+      backgroundColor: c.cardElevated,
+      borderRadius: 14,
+      paddingVertical: 16,
+      borderWidth: 1,
+      borderColor: c.borderSubtle,
+    },
+    actionIcon: {
+      width: 42,
+      height: 42,
+      borderRadius: 12,
+      backgroundColor: c.primaryTint,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    actionLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.text,
+    },
 
-  // Notifications
-  notificationsCard: {
-    marginHorizontal: 20,
-    padding: 0,
-  },
-  notifItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 14,
-  },
-  notifItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.borderSubtle,
-  },
-  notifDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: PrimaryBlue,
-    marginTop: 5,
-    marginRight: 12,
-  },
-  notifDotRead: {
-    backgroundColor: Colors.light.border,
-  },
-  notifContent: {
-    flex: 1,
-  },
-  notifText: {
-    fontSize: 14,
-    color: TextPrimary,
-    lineHeight: 19,
-    marginBottom: 3,
-  },
-  notifTime: {
-    fontSize: 12,
-    color: TextTertiary,
-  },
-});
+    // Notifications
+    notificationsCard: {
+      marginHorizontal: 20,
+      padding: 0,
+    },
+    notifItem: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      padding: 14,
+    },
+    notifItemBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: c.borderSubtle,
+    },
+    notifDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: c.primary,
+      marginTop: 5,
+      marginRight: 12,
+    },
+    notifDotRead: {
+      backgroundColor: c.border,
+    },
+    notifContent: {
+      flex: 1,
+    },
+    notifText: {
+      fontSize: 14,
+      color: c.text,
+      lineHeight: 19,
+      marginBottom: 3,
+    },
+    notifTime: {
+      fontSize: 12,
+      color: c.textTertiary,
+    },
+  });

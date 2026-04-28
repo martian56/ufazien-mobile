@@ -1,5 +1,5 @@
 // Hosting Screen (Read-Only)
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -19,16 +19,8 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Toast } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  PrimaryBlue,
-  PrimaryIndigo,
-  PrimaryPurple,
-  Colors,
-  RadiusMedium,
-} from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
+import { PrimaryBlue, PrimaryPurple, RadiusMedium, ThemeColors } from '@/constants/theme';
 import apiClient from '@/config/api';
 
 interface Subscription {
@@ -118,53 +110,56 @@ const getRelativeTime = (dateString: string): string => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string, c: ThemeColors) => {
   switch (status) {
     case 'active':
       return {
-        bg: Colors.light.success + '20',
-        text: Colors.light.success,
-        border: Colors.light.success + '40',
+        bg: c.success + '20',
+        text: c.success,
+        border: c.success + '40',
       };
     case 'building':
       return {
-        bg: Colors.light.warning + '20',
-        text: Colors.light.warning,
-        border: Colors.light.warning + '40',
+        bg: c.warning + '20',
+        text: c.warning,
+        border: c.warning + '40',
       };
     case 'inactive':
-      return { bg: TextSecondary + '20', text: TextSecondary, border: TextSecondary + '40' };
+      return { bg: c.textSecondary + '20', text: c.textSecondary, border: c.textSecondary + '40' };
     default:
       return {
-        bg: Colors.light.error + '20',
-        text: Colors.light.error,
-        border: Colors.light.error + '40',
+        bg: c.error + '20',
+        text: c.error,
+        border: c.error + '40',
       };
   }
 };
 
 const getActivityIcon = (
   action: string,
+  c: ThemeColors,
 ): { name: keyof typeof Ionicons.glyphMap; color: string } => {
   if (action.includes('created') || action.includes('deployed')) {
-    return { name: 'checkmark-circle', color: Colors.light.success };
+    return { name: 'checkmark-circle', color: c.success };
   }
   if (action.includes('deleted')) {
-    return { name: 'trash', color: Colors.light.error };
+    return { name: 'trash', color: c.error };
   }
   if (action.includes('database')) {
-    return { name: 'server', color: PrimaryBlue };
+    return { name: 'server', color: c.primary };
   }
   if (action.includes('domain') || action.includes('ssl')) {
-    return { name: 'shield-checkmark', color: Colors.light.success };
+    return { name: 'shield-checkmark', color: c.success };
   }
   if (action.includes('backup')) {
-    return { name: 'save', color: PrimaryPurple };
+    return { name: 'save', color: c.purple };
   }
-  return { name: 'pulse', color: TextSecondary };
+  return { name: 'pulse', color: c.textSecondary };
 };
 
 export default function HostingScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -365,12 +360,12 @@ export default function HostingScreen() {
     return (
       <View style={styles.statsContainer}>
         <Card style={[styles.statCard, styles.statCardBlue]}>
-          <Ionicons name="server" size={24} color={PrimaryBlue} />
+          <Ionicons name="server" size={24} color={c.primary} />
           <Text style={styles.statValue}>{totalWebsites}</Text>
           <Text style={styles.statLabel}>Total Websites</Text>
         </Card>
         <Card style={[styles.statCard, styles.statCardGreen]}>
-          <Ionicons name="pulse" size={24} color={Colors.light.success} />
+          <Ionicons name="pulse" size={24} color={c.success} />
           <Text style={styles.statValue}>{activeWebsites}</Text>
           <Text style={styles.statLabel}>Active Sites</Text>
         </Card>
@@ -380,7 +375,7 @@ export default function HostingScreen() {
           <Text style={styles.statLabel}>Total Visits</Text>
         </Card>
         <Card style={[styles.statCard, styles.statCardYellow]}>
-          <Ionicons name="hardware-chip" size={24} color={Colors.light.warning} />
+          <Ionicons name="hardware-chip" size={24} color={c.warning} />
           <Text style={styles.statValue}>{formatStorage(storageUsed)}</Text>
           <Text style={styles.statLabel}>Storage Used</Text>
         </Card>
@@ -389,7 +384,7 @@ export default function HostingScreen() {
   };
 
   const renderWebsiteCard = ({ item }: { item: Website }) => {
-    const statusColors = getStatusColor(item.status);
+    const statusColors = getStatusColor(item.status, c);
     const domain = item.domain?.domain_name || item.url?.replace('https://', '') || 'N/A';
 
     return (
@@ -399,7 +394,7 @@ export default function HostingScreen() {
             <Ionicons
               name={item.website_type === 'php' ? 'code' : 'globe'}
               size={24}
-              color={PrimaryBlue}
+              color={c.primary}
             />
           </View>
           <View style={styles.websiteInfo}>
@@ -424,7 +419,7 @@ export default function HostingScreen() {
               <Badge
                 label="SSL"
                 variant="default"
-                style={[styles.sslBadge, { backgroundColor: Colors.light.success + '20' }]}
+                style={[styles.sslBadge, { backgroundColor: c.success + '20' }]}
               />
             )}
           </View>
@@ -433,33 +428,33 @@ export default function HostingScreen() {
         <View style={styles.websiteMeta}>
           {item.last_deployment && (
             <View style={styles.metaItem}>
-              <Ionicons name="time" size={16} color={TextSecondary} />
+              <Ionicons name="time" size={16} color={c.textSecondary} />
               <Text style={styles.metaText}>
                 Deployed: {new Date(item.last_deployment).toLocaleDateString()}
               </Text>
             </View>
           )}
           <View style={styles.metaItem}>
-            <Ionicons name="eye" size={16} color={TextSecondary} />
+            <Ionicons name="eye" size={16} color={c.textSecondary} />
             <Text style={styles.metaText}>{item.total_visits.toLocaleString()} visits</Text>
           </View>
           <View style={styles.metaItem}>
-            <Ionicons name="hardware-chip" size={16} color={TextSecondary} />
+            <Ionicons name="hardware-chip" size={16} color={c.textSecondary} />
             <Text style={styles.metaText}>{formatStorage(item.storage_used_mb)}</Text>
           </View>
         </View>
 
         <View style={styles.websiteActions}>
           <TouchableOpacity style={styles.actionButton} onPress={() => openWebsite(item.url)}>
-            <Ionicons name="open-outline" size={18} color={PrimaryBlue} />
+            <Ionicons name="open-outline" size={18} color={c.primary} />
             <Text style={styles.actionButtonText}>Visit</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionButton, styles.actionButtonDisabled]} disabled>
-            <Ionicons name="create-outline" size={18} color={TextSecondary} />
+            <Ionicons name="create-outline" size={18} color={c.textSecondary} />
             <Text style={[styles.actionButtonText, styles.actionButtonTextDisabled]}>Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionButton, styles.actionButtonDisabled]} disabled>
-            <Ionicons name="settings-outline" size={18} color={TextSecondary} />
+            <Ionicons name="settings-outline" size={18} color={c.textSecondary} />
             <Text style={[styles.actionButtonText, styles.actionButtonTextDisabled]}>Settings</Text>
           </TouchableOpacity>
         </View>
@@ -468,7 +463,7 @@ export default function HostingScreen() {
   };
 
   const renderDatabaseCard = ({ item }: { item: Database }) => {
-    const statusColors = getStatusColor(item.status);
+    const statusColors = getStatusColor(item.status, c);
     const dbTypeName = item.db_type === 'mysql' ? 'MySQL' : 'PostgreSQL';
 
     return (
@@ -477,7 +472,7 @@ export default function HostingScreen() {
           <Ionicons
             name="server"
             size={32}
-            color={item.db_type === 'mysql' ? PrimaryBlue : PrimaryIndigo}
+            color={item.db_type === 'mysql' ? c.primary : c.indigo}
           />
           <View style={styles.databaseInfo}>
             <Text style={styles.databaseName}>{item.name}</Text>
@@ -495,17 +490,17 @@ export default function HostingScreen() {
 
         <View style={styles.databaseMeta}>
           <View style={styles.metaItem}>
-            <Ionicons name="hardware-chip" size={16} color={TextSecondary} />
+            <Ionicons name="hardware-chip" size={16} color={c.textSecondary} />
             <Text style={styles.metaText}>{formatStorage(item.size_mb)}</Text>
           </View>
           <View style={styles.metaItem}>
-            <Ionicons name="server" size={16} color={TextSecondary} />
+            <Ionicons name="server" size={16} color={c.textSecondary} />
             <Text style={[styles.metaText, styles.monoText]}>
               {item.host}:{item.port}
             </Text>
           </View>
           <View style={styles.metaItem}>
-            <Ionicons name="calendar" size={16} color={TextSecondary} />
+            <Ionicons name="calendar" size={16} color={c.textSecondary} />
             <Text style={styles.metaText}>
               Created: {new Date(item.created_at).toLocaleDateString()}
             </Text>
@@ -525,7 +520,7 @@ export default function HostingScreen() {
   };
 
   const renderActivityItem = ({ item }: { item: Activity }) => {
-    const icon = getActivityIcon(item.action);
+    const icon = getActivityIcon(item.action, c);
     const target = item.target_name || item.website_name || item.database_name || '';
 
     return (
@@ -546,7 +541,7 @@ export default function HostingScreen() {
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       <Card style={styles.infoCard}>
         <View style={styles.infoHeader}>
-          <Ionicons name="information-circle" size={20} color={Colors.light.warning} />
+          <Ionicons name="information-circle" size={20} color={c.warning} />
           <Text style={styles.infoText}>Website management is only available on desktop</Text>
         </View>
       </Card>
@@ -557,7 +552,7 @@ export default function HostingScreen() {
         <Text style={styles.sectionTitle}>Recent Activity</Text>
         {activities.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="pulse" size={48} color={TextSecondary} />
+            <Ionicons name="pulse" size={48} color={c.textSecondary} />
             <Text style={styles.emptyText}>No recent activity</Text>
           </View>
         ) : (
@@ -576,11 +571,11 @@ export default function HostingScreen() {
     <View style={styles.tabContent}>
       {websitesLoading && websites.length === 0 ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={PrimaryBlue} />
+          <ActivityIndicator size="large" color={c.primary} />
         </View>
       ) : websites.length === 0 ? (
         <Card style={styles.emptyCard}>
-          <Ionicons name="globe" size={64} color={TextSecondary} />
+          <Ionicons name="globe" size={64} color={c.textSecondary} />
           <Text style={styles.emptyTitle}>No websites found</Text>
           <Text style={styles.emptySubtext}>
             Get started by creating your first website (desktop only)
@@ -602,11 +597,11 @@ export default function HostingScreen() {
     <View style={styles.tabContent}>
       {databasesLoading && databases.length === 0 ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={PrimaryBlue} />
+          <ActivityIndicator size="large" color={c.primary} />
         </View>
       ) : databases.length === 0 ? (
         <Card style={styles.emptyCard}>
-          <Ionicons name="server" size={64} color={TextSecondary} />
+          <Ionicons name="server" size={64} color={c.textSecondary} />
           <Text style={styles.emptyTitle}>No databases found</Text>
           <Text style={styles.emptySubtext}>
             Get started by creating your first database (desktop only)
@@ -628,29 +623,29 @@ export default function HostingScreen() {
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       <Card style={styles.infoCard}>
         <View style={styles.infoHeader}>
-          <Ionicons name="information-circle" size={20} color={PrimaryBlue} />
+          <Ionicons name="information-circle" size={20} color={c.primary} />
           <Text style={styles.infoText}>Analytics charts are only available on desktop</Text>
         </View>
       </Card>
 
       <View style={styles.metricsGrid}>
         <Card style={styles.metricCard}>
-          <Ionicons name="speedometer" size={24} color={Colors.light.success} />
+          <Ionicons name="speedometer" size={24} color={c.success} />
           <Text style={styles.metricValue}>1.2s</Text>
           <Text style={styles.metricLabel}>Avg Load Time</Text>
         </Card>
         <Card style={styles.metricCard}>
-          <Ionicons name="checkmark-circle" size={24} color={Colors.light.success} />
+          <Ionicons name="checkmark-circle" size={24} color={c.success} />
           <Text style={styles.metricValue}>99.9%</Text>
           <Text style={styles.metricLabel}>Uptime</Text>
         </Card>
         <Card style={styles.metricCard}>
-          <Ionicons name="shield-checkmark" size={24} color={Colors.light.success} />
+          <Ionicons name="shield-checkmark" size={24} color={c.success} />
           <Text style={styles.metricValue}>A+</Text>
           <Text style={styles.metricLabel}>SSL Score</Text>
         </Card>
         <Card style={styles.metricCard}>
-          <Ionicons name="lock-closed" size={24} color={Colors.light.success} />
+          <Ionicons name="lock-closed" size={24} color={c.success} />
           <Text style={styles.metricValue}>95/100</Text>
           <Text style={styles.metricLabel}>Security</Text>
         </Card>
@@ -668,7 +663,7 @@ export default function HostingScreen() {
   if (loading && !subscription && !stats) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={PrimaryBlue} />
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
@@ -678,7 +673,7 @@ export default function HostingScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={TextPrimary} />
+          <Ionicons name="arrow-back" size={24} color={c.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Hosting</Text>
       </View>
@@ -702,7 +697,7 @@ export default function HostingScreen() {
               <Ionicons
                 name={tab.icon}
                 size={20}
-                color={activeTab === tab.id ? PrimaryBlue : TextSecondary}
+                color={activeTab === tab.id ? c.primary : c.textSecondary}
               />
               <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>
                 {tab.name}
@@ -725,404 +720,405 @@ export default function HostingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  scrollView: {
-    flexGrow: 0,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: BackgroundPrimary,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    paddingBottom: 8,
-  },
-  backButton: {
-    marginRight: 12,
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: TextPrimary,
-  },
-  subscriptionBanner: {
-    margin: 16,
-    marginTop: 8,
-    borderRadius: RadiusMedium,
-    padding: 20,
-  },
-  subscriptionContent: {
-    gap: 16,
-  },
-  subscriptionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  planName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  usageGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  usageItem: {
-    flex: 1,
-    minWidth: '45%',
-  },
-  usageLabel: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    opacity: 0.9,
-    marginBottom: 4,
-  },
-  usageValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  upgradeButton: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: RadiusMedium,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  upgradeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: PrimaryBlue,
-  },
-  tabs: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-    gap: 12,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    gap: 8,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: PrimaryBlue,
-  },
-  tabText: {
-    fontSize: 12,
-    color: TextSecondary,
-    fontWeight: '600',
-  },
-  tabTextActive: {
-    color: PrimaryBlue,
-  },
-  tabContentContainer: {
-    flex: 1,
-  },
-  tabContent: {
-    flex: 1,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 16,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '45%',
-    padding: 16,
-    alignItems: 'center',
-    gap: 8,
-  },
-  statCardBlue: {
-    backgroundColor: PrimaryBlue + '15',
-  },
-  statCardGreen: {
-    backgroundColor: Colors.light.success + '15',
-  },
-  statCardPurple: {
-    backgroundColor: PrimaryPurple + '15',
-  },
-  statCardYellow: {
-    backgroundColor: Colors.light.warning + '15',
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: TextPrimary,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: TextSecondary,
-    textAlign: 'center',
-  },
-  infoCard: {
-    margin: 16,
-    marginBottom: 8,
-    padding: 16,
-    backgroundColor: Colors.light.warning + '10',
-    borderColor: Colors.light.warning + '30',
-  },
-  infoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    color: TextPrimary,
-    flex: 1,
-  },
-  activitiesCard: {
-    margin: 16,
-    marginTop: 8,
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 16,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-    gap: 12,
-  },
-  activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginBottom: 4,
-  },
-  activitySubtitle: {
-    fontSize: 12,
-    color: TextSecondary,
-    marginBottom: 4,
-  },
-  activityTime: {
-    fontSize: 11,
-    color: TextSecondary,
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  websiteCard: {
-    marginBottom: 16,
-    padding: 16,
-  },
-  websiteHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 12,
-  },
-  websiteIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: PrimaryBlue + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  websiteInfo: {
-    flex: 1,
-  },
-  websiteName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 4,
-  },
-  statusBadge: {
-    alignSelf: 'flex-start',
-  },
-  websiteDomain: {
-    fontSize: 14,
-    color: TextSecondary,
-    marginBottom: 8,
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-  customBadge: {
-    backgroundColor: PrimaryBlue + '15',
-  },
-  sslBadge: {
-    borderColor: Colors.light.success + '40',
-  },
-  websiteMeta: {
-    gap: 8,
-    marginBottom: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  metaText: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  monoText: {
-    fontFamily: 'monospace',
-  },
-  websiteActions: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: RadiusMedium,
-    borderWidth: 1,
-    borderColor: PrimaryBlue,
-    gap: 6,
-  },
-  actionButtonDisabled: {
-    borderColor: Colors.light.border,
-    opacity: 0.5,
-  },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: PrimaryBlue,
-  },
-  actionButtonTextDisabled: {
-    color: TextSecondary,
-  },
-  databaseCard: {
-    marginBottom: 16,
-    padding: 16,
-  },
-  databaseHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
-  },
-  databaseInfo: {
-    flex: 1,
-  },
-  databaseName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 4,
-  },
-  databaseType: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  databaseMeta: {
-    gap: 8,
-    marginBottom: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-  },
-  databaseActions: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 16,
-    gap: 12,
-  },
-  metricCard: {
-    flex: 1,
-    minWidth: '45%',
-    padding: 16,
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.light.success + '10',
-  },
-  metricValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.light.success,
-  },
-  metricLabel: {
-    fontSize: 12,
-    color: TextSecondary,
-    textAlign: 'center',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-  },
-  emptyCard: {
-    margin: 16,
-    padding: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: TextSecondary,
-    textAlign: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: TextSecondary,
-    marginTop: 16,
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    scrollView: {
+      flexGrow: 0,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: c.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      paddingBottom: 8,
+    },
+    backButton: {
+      marginRight: 12,
+      padding: 4,
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: c.text,
+    },
+    subscriptionBanner: {
+      margin: 16,
+      marginTop: 8,
+      borderRadius: RadiusMedium,
+      padding: 20,
+    },
+    subscriptionContent: {
+      gap: 16,
+    },
+    subscriptionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    planName: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+    },
+    usageGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 16,
+    },
+    usageItem: {
+      flex: 1,
+      minWidth: '45%',
+    },
+    usageLabel: {
+      fontSize: 12,
+      color: '#FFFFFF',
+      opacity: 0.9,
+      marginBottom: 4,
+    },
+    usageValue: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+    },
+    upgradeButton: {
+      backgroundColor: '#FFFFFF',
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: RadiusMedium,
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    upgradeButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: c.primary,
+    },
+    tabs: {
+      flexDirection: 'row',
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+      gap: 12,
+    },
+    tab: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      gap: 8,
+      borderBottomWidth: 2,
+      borderBottomColor: 'transparent',
+    },
+    tabActive: {
+      borderBottomColor: c.primary,
+    },
+    tabText: {
+      fontSize: 12,
+      color: c.textSecondary,
+      fontWeight: '600',
+    },
+    tabTextActive: {
+      color: c.primary,
+    },
+    tabContentContainer: {
+      flex: 1,
+    },
+    tabContent: {
+      flex: 1,
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      padding: 16,
+      gap: 12,
+    },
+    statCard: {
+      flex: 1,
+      minWidth: '45%',
+      padding: 16,
+      alignItems: 'center',
+      gap: 8,
+    },
+    statCardBlue: {
+      backgroundColor: c.primaryTint,
+    },
+    statCardGreen: {
+      backgroundColor: c.successTint,
+    },
+    statCardPurple: {
+      backgroundColor: PrimaryPurple + '15',
+    },
+    statCardYellow: {
+      backgroundColor: c.warningTint,
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: c.text,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: c.textSecondary,
+      textAlign: 'center',
+    },
+    infoCard: {
+      margin: 16,
+      marginBottom: 8,
+      padding: 16,
+      backgroundColor: c.warning + '10',
+      borderColor: c.warning + '30',
+    },
+    infoHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    infoText: {
+      fontSize: 14,
+      color: c.text,
+      flex: 1,
+    },
+    activitiesCard: {
+      margin: 16,
+      marginTop: 8,
+      padding: 16,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 16,
+    },
+    activityItem: {
+      flexDirection: 'row',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+      gap: 12,
+    },
+    activityIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    activityContent: {
+      flex: 1,
+    },
+    activityTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 4,
+    },
+    activitySubtitle: {
+      fontSize: 12,
+      color: c.textSecondary,
+      marginBottom: 4,
+    },
+    activityTime: {
+      fontSize: 11,
+      color: c.textSecondary,
+    },
+    listContent: {
+      padding: 16,
+      paddingBottom: 32,
+    },
+    websiteCard: {
+      marginBottom: 16,
+      padding: 16,
+    },
+    websiteHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+      gap: 12,
+    },
+    websiteIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: c.primaryTint,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    websiteInfo: {
+      flex: 1,
+    },
+    websiteName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 4,
+    },
+    statusBadge: {
+      alignSelf: 'flex-start',
+    },
+    websiteDomain: {
+      fontSize: 14,
+      color: c.textSecondary,
+      marginBottom: 8,
+    },
+    badgesRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 12,
+    },
+    customBadge: {
+      backgroundColor: c.primaryTint,
+    },
+    sslBadge: {
+      borderColor: c.success + '40',
+    },
+    websiteMeta: {
+      gap: 8,
+      marginBottom: 16,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    metaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    metaText: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    monoText: {
+      fontFamily: 'monospace',
+    },
+    websiteActions: {
+      flexDirection: 'row',
+      gap: 8,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    actionButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: RadiusMedium,
+      borderWidth: 1,
+      borderColor: c.primary,
+      gap: 6,
+    },
+    actionButtonDisabled: {
+      borderColor: c.border,
+      opacity: 0.5,
+    },
+    actionButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.primary,
+    },
+    actionButtonTextDisabled: {
+      color: c.textSecondary,
+    },
+    databaseCard: {
+      marginBottom: 16,
+      padding: 16,
+    },
+    databaseHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+      gap: 12,
+    },
+    databaseInfo: {
+      flex: 1,
+    },
+    databaseName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 4,
+    },
+    databaseType: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    databaseMeta: {
+      gap: 8,
+      marginBottom: 16,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    databaseActions: {
+      flexDirection: 'row',
+      gap: 8,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    metricsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      padding: 16,
+      gap: 12,
+    },
+    metricCard: {
+      flex: 1,
+      minWidth: '45%',
+      padding: 16,
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: c.success + '10',
+    },
+    metricValue: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: c.success,
+    },
+    metricLabel: {
+      fontSize: 12,
+      color: c.textSecondary,
+      textAlign: 'center',
+    },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+    },
+    emptyCard: {
+      margin: 16,
+      padding: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: c.textSecondary,
+      textAlign: 'center',
+    },
+    emptyText: {
+      fontSize: 14,
+      color: c.textSecondary,
+      marginTop: 16,
+    },
+  });

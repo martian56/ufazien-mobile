@@ -1,13 +1,7 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useMemo, useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
-import {
-  Colors,
-  BorderDefault,
-  BorderFocus,
-  RadiusMedium,
-  TextPrimary,
-  TextSecondary,
-} from '@/constants/theme';
+import { RadiusMedium, ThemeColors } from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -26,6 +20,8 @@ export const Input: React.FC<InputProps> = ({
   rightIcon,
   ...props
 }) => {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [focused, setFocused] = useState(false);
 
   return (
@@ -46,7 +42,7 @@ export const Input: React.FC<InputProps> = ({
             rightIcon ? styles.inputWithRightIcon : undefined,
             style,
           ]}
-          placeholderTextColor={TextSecondary}
+          placeholderTextColor={c.textTertiary}
           onFocus={(e) => {
             setFocused(true);
             props.onFocus?.(e);
@@ -64,59 +60,60 @@ export const Input: React.FC<InputProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: TextSecondary,
-    marginBottom: 6,
-    letterSpacing: 0.2,
-  },
-  inputWrapper: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: BorderDefault,
-    borderRadius: RadiusMedium,
-    backgroundColor: Colors.light.card,
-  },
-  inputWrapperFocused: {
-    borderColor: BorderFocus,
-    backgroundColor: '#FFFFFF',
-  },
-  inputWrapperError: {
-    borderColor: Colors.light.error,
-  },
-  input: {
-    flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 15,
-    color: TextPrimary,
-  },
-  inputWithLeftIcon: {
-    paddingLeft: 42,
-  },
-  inputWithRightIcon: {
-    paddingRight: 42,
-  },
-  leftIcon: {
-    position: 'absolute',
-    left: 14,
-    zIndex: 1,
-  },
-  rightIcon: {
-    position: 'absolute',
-    right: 14,
-    zIndex: 1,
-  },
-  errorText: {
-    fontSize: 12,
-    color: Colors.light.error,
-    marginTop: 4,
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: 16,
+    },
+    label: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: c.textSecondary,
+      marginBottom: 6,
+      letterSpacing: 0.2,
+    },
+    inputWrapper: {
+      position: 'relative',
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1.5,
+      borderColor: c.border,
+      borderRadius: RadiusMedium,
+      backgroundColor: c.inputBackground,
+    },
+    inputWrapperFocused: {
+      borderColor: c.primary,
+      backgroundColor: c.inputBackgroundFocused,
+    },
+    inputWrapperError: {
+      borderColor: c.error,
+    },
+    input: {
+      flex: 1,
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+      fontSize: 15,
+      color: c.text,
+    },
+    inputWithLeftIcon: {
+      paddingLeft: 42,
+    },
+    inputWithRightIcon: {
+      paddingRight: 42,
+    },
+    leftIcon: {
+      position: 'absolute',
+      left: 14,
+      zIndex: 1,
+    },
+    rightIcon: {
+      position: 'absolute',
+      right: 14,
+      zIndex: 1,
+    },
+    errorText: {
+      fontSize: 12,
+      color: c.error,
+      marginTop: 4,
+    },
+  });
