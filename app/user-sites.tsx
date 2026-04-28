@@ -1,5 +1,5 @@
 // User Sites Screen - Browse Public Websites
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -20,14 +20,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Toast } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { useDebounce } from '@/hooks/useDebounce';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  PrimaryBlue,
-  Colors,
-  RadiusMedium,
-} from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
+import { RadiusMedium, ThemeColors } from '@/constants/theme';
 import apiClient from '@/config/api';
 
 interface PublicWebsite {
@@ -59,6 +53,8 @@ interface WebsitesResponse {
 type SortOption = 'most_visited' | 'newest' | 'name';
 
 export default function UserSitesScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [websites, setWebsites] = useState<PublicWebsite[]>([]);
@@ -211,7 +207,7 @@ export default function UserSitesScreen() {
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
             <View style={styles.websiteIcon}>
-              <Ionicons name="globe" size={24} color={PrimaryBlue} />
+              <Ionicons name="globe" size={24} color={c.primary} />
             </View>
             <View style={styles.cardHeaderText}>
               <Text style={styles.websiteName} numberOfLines={1}>
@@ -232,7 +228,7 @@ export default function UserSitesScreen() {
         )}
 
         <View style={styles.creatorRow}>
-          <Ionicons name="person" size={16} color={TextSecondary} />
+          <Ionicons name="person" size={16} color={c.textSecondary} />
           <Text style={styles.creatorText}>
             {item.creator.first_name && item.creator.last_name
               ? `${item.creator.first_name} ${item.creator.last_name}`
@@ -242,11 +238,11 @@ export default function UserSitesScreen() {
 
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Ionicons name="eye" size={16} color={TextSecondary} />
+            <Ionicons name="eye" size={16} color={c.textSecondary} />
             <Text style={styles.statText}>{(item.visit_count ?? 0).toLocaleString()}</Text>
           </View>
           <View style={styles.statItem}>
-            <Ionicons name="calendar" size={16} color={TextSecondary} />
+            <Ionicons name="calendar" size={16} color={c.textSecondary} />
             <Text style={styles.statText}>
               {item.created_at ? formatDate(item.created_at) : 'N/A'}
             </Text>
@@ -267,7 +263,7 @@ export default function UserSitesScreen() {
         </View>
 
         <TouchableOpacity style={styles.openButton} onPress={() => openWebsite(item.domain)}>
-          <Ionicons name="open-outline" size={18} color={PrimaryBlue} />
+          <Ionicons name="open-outline" size={18} color={c.primary} />
           <Text style={styles.openButtonText}>Open Website</Text>
         </TouchableOpacity>
       </Card>
@@ -279,7 +275,7 @@ export default function UserSitesScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={TextPrimary} />
+          <Ionicons name="arrow-back" size={24} color={c.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Public Websites</Text>
         <View style={styles.headerRight} />
@@ -293,7 +289,7 @@ export default function UserSitesScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
             style={styles.searchInput}
-            leftIcon={<Ionicons name="search" size={20} color={TextSecondary} />}
+            leftIcon={<Ionicons name="search" size={20} color={c.textSecondary} />}
           />
         </Card>
 
@@ -324,12 +320,12 @@ export default function UserSitesScreen() {
       {/* Websites Grid */}
       {loading && websites.length === 0 ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={PrimaryBlue} />
+          <ActivityIndicator size="large" color={c.primary} />
           <Text style={styles.loadingText}>Loading websites...</Text>
         </View>
       ) : websites.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="globe-outline" size={64} color={TextSecondary} />
+          <Ionicons name="globe-outline" size={64} color={c.textSecondary} />
           <Text style={styles.emptyTitle}>No websites found</Text>
           <Text style={styles.emptyText}>
             {searchQuery
@@ -350,7 +346,7 @@ export default function UserSitesScreen() {
           ListFooterComponent={
             loading && websites.length > 0 ? (
               <View style={styles.footerLoading}>
-                <ActivityIndicator size="small" color={PrimaryBlue} />
+                <ActivityIndicator size="small" color={c.primary} />
               </View>
             ) : null
           }
@@ -362,215 +358,216 @@ export default function UserSitesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: Colors.light.card,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerRight: {
-    width: 40,
-  },
-  filtersContainer: {
-    padding: 16,
-    paddingBottom: 8,
-    gap: 12,
-  },
-  searchCard: {
-    padding: 12,
-  },
-  searchInput: {
-    marginBottom: 0,
-  },
-  sortCard: {
-    padding: 12,
-  },
-  sortPicker: {
-    marginBottom: 0,
-  },
-  resultsCount: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  resultsCountText: {
-    fontSize: 14,
-    color: TextSecondary,
-    fontWeight: '500',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 100,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 100,
-    paddingHorizontal: 32,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: TextSecondary,
-    textAlign: 'center',
-  },
-  listContent: {
-    padding: 16,
-    paddingTop: 8,
-  },
-  websiteCard: {
-    marginBottom: 16,
-    padding: 16,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  cardHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: 8,
-  },
-  websiteIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: RadiusMedium,
-    backgroundColor: `${PrimaryBlue}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  cardHeaderText: {
-    flex: 1,
-  },
-  websiteName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 4,
-  },
-  websiteDomain: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  statusBadge: {
-    alignSelf: 'flex-start',
-  },
-  description: {
-    fontSize: 14,
-    color: TextSecondary,
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  creatorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 6,
-  },
-  creatorText: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 12,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statText: {
-    fontSize: 13,
-    color: TextSecondary,
-  },
-  storageRow: {
-    marginBottom: 12,
-  },
-  storageInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  storageLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: TextSecondary,
-  },
-  storageValue: {
-    fontSize: 12,
-    color: TextPrimary,
-    fontWeight: '500',
-  },
-  progressBarContainer: {
-    height: 6,
-    backgroundColor: Colors.light.background,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: PrimaryBlue,
-    borderRadius: 3,
-  },
-  openButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: RadiusMedium,
-    borderWidth: 1,
-    borderColor: PrimaryBlue,
-    backgroundColor: `${PrimaryBlue}10`,
-    gap: 8,
-  },
-  openButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: PrimaryBlue,
-  },
-  footerLoading: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+      backgroundColor: c.card,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    backButton: {
+      padding: 8,
+      marginLeft: -8,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: c.text,
+      flex: 1,
+      textAlign: 'center',
+    },
+    headerRight: {
+      width: 40,
+    },
+    filtersContainer: {
+      padding: 16,
+      paddingBottom: 8,
+      gap: 12,
+    },
+    searchCard: {
+      padding: 12,
+    },
+    searchInput: {
+      marginBottom: 0,
+    },
+    sortCard: {
+      padding: 12,
+    },
+    sortPicker: {
+      marginBottom: 0,
+    },
+    resultsCount: {
+      paddingHorizontal: 16,
+      paddingBottom: 8,
+    },
+    resultsCountText: {
+      fontSize: 14,
+      color: c.textSecondary,
+      fontWeight: '500',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: 100,
+    },
+    loadingText: {
+      marginTop: 12,
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: 100,
+      paddingHorizontal: 32,
+    },
+    emptyTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: c.text,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: c.textSecondary,
+      textAlign: 'center',
+    },
+    listContent: {
+      padding: 16,
+      paddingTop: 8,
+    },
+    websiteCard: {
+      marginBottom: 16,
+      padding: 16,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 12,
+    },
+    cardHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+      marginRight: 8,
+    },
+    websiteIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: RadiusMedium,
+      backgroundColor: c.primaryTint,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    cardHeaderText: {
+      flex: 1,
+    },
+    websiteName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 4,
+    },
+    websiteDomain: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    statusBadge: {
+      alignSelf: 'flex-start',
+    },
+    description: {
+      fontSize: 14,
+      color: c.textSecondary,
+      marginBottom: 12,
+      lineHeight: 20,
+    },
+    creatorRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+      gap: 6,
+    },
+    creatorText: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      gap: 16,
+      marginBottom: 12,
+    },
+    statItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    statText: {
+      fontSize: 13,
+      color: c.textSecondary,
+    },
+    storageRow: {
+      marginBottom: 12,
+    },
+    storageInfo: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 6,
+    },
+    storageLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.textSecondary,
+    },
+    storageValue: {
+      fontSize: 12,
+      color: c.text,
+      fontWeight: '500',
+    },
+    progressBarContainer: {
+      height: 6,
+      backgroundColor: c.subtle,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    progressBar: {
+      height: '100%',
+      backgroundColor: c.primary,
+      borderRadius: 3,
+    },
+    openButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: RadiusMedium,
+      borderWidth: 1,
+      borderColor: c.primary,
+      backgroundColor: c.primaryTint,
+      gap: 8,
+    },
+    openButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.primary,
+    },
+    footerLoading: {
+      paddingVertical: 20,
+      alignItems: 'center',
+    },
+  });

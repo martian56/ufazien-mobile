@@ -62,12 +62,15 @@ export const ShadowHeavy = {
 export const Colors = {
   light: {
     text: TextPrimary,
+    textSecondary: TextSecondary,
+    textTertiary: TextTertiary,
     background: BackgroundPrimary,
     tint: PrimaryBlue,
     icon: TextSecondary,
     tabIconDefault: TextTertiary,
     tabIconSelected: PrimaryBlue,
     card: BackgroundCard,
+    cardElevated: '#FFFFFF',
     border: BorderDefault,
     borderSubtle: BorderSubtle,
     primary: PrimaryBlue,
@@ -78,17 +81,38 @@ export const Colors = {
     warning: WarningYellow,
     info: InfoBlue,
     subtle: BackgroundSubtle,
+    hover: BackgroundHover,
+    // Tinted accent backgrounds
+    primaryTint: '#E8EDFB',
+    successTint: '#D1FAE5',
+    errorTint: '#FEE2E2',
+    warningTint: '#FEF3C7',
+    infoTint: '#DBEAFE',
+    purpleTint: '#EDE9FE',
+    // Tinted accent text colors
+    primaryTintText: '#1A56DB',
+    successTintText: '#065F46',
+    errorTintText: '#991B1B',
+    warningTintText: '#92400E',
+    infoTintText: '#1E40AF',
+    // Misc
+    overlay: 'rgba(0, 0, 0, 0.4)',
+    inputBackground: BackgroundCard,
+    inputBackgroundFocused: '#FFFFFF',
   },
   dark: {
     text: '#E8E9ED',
-    background: '#111318',
+    textSecondary: '#9BA0B5',
+    textTertiary: '#6B7185',
+    background: '#0F1117',
     tint: '#4B83F0',
-    icon: '#8B8FA3',
-    tabIconDefault: '#8B8FA3',
+    icon: '#9BA0B5',
+    tabIconDefault: '#6B7185',
     tabIconSelected: '#4B83F0',
-    card: '#1C1F2A',
+    card: '#181B24',
+    cardElevated: '#1F222D',
     border: '#2D3044',
-    borderSubtle: '#252838',
+    borderSubtle: '#23263A',
     primary: '#4B83F0',
     indigo: '#6366F1',
     purple: '#8B5CF6',
@@ -96,9 +120,29 @@ export const Colors = {
     error: '#F87171',
     warning: '#FBBF24',
     info: '#60A5FA',
-    subtle: '#1C1F2A',
+    subtle: '#1F222D',
+    hover: '#23263A',
+    // Tinted accent backgrounds — darker, low-saturation for dark mode
+    primaryTint: '#1E2C5C',
+    successTint: '#0E3B2E',
+    errorTint: '#4A1F1F',
+    warningTint: '#4A371A',
+    infoTint: '#1E2E5A',
+    purpleTint: '#2E1F4D',
+    // Tinted accent text colors — brighter for dark backgrounds
+    primaryTintText: '#93B4F7',
+    successTintText: '#6EE7B7',
+    errorTintText: '#FCA5A5',
+    warningTintText: '#FCD34D',
+    infoTintText: '#93C5FD',
+    // Misc
+    overlay: 'rgba(0, 0, 0, 0.6)',
+    inputBackground: '#1F222D',
+    inputBackgroundFocused: '#23263A',
   },
 };
+
+export type ThemeColors = typeof Colors.light;
 
 export const Fonts = Platform.select({
   ios: {

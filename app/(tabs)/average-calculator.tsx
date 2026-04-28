@@ -1,5 +1,5 @@
 // Average Calculator Screen
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,15 +20,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Toast } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
 import { useDebounce } from '@/hooks/useDebounce';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  PrimaryBlue,
-  Colors,
-  RadiusMedium,
-  RadiusFull,
-} from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
+import { RadiusMedium, RadiusFull, ThemeColors } from '@/constants/theme';
 import apiClient from '@/config/api';
 
 interface SchemaField {
@@ -80,6 +73,8 @@ interface SchemaListItem {
 }
 
 export default function AverageCalculatorScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [activeTab, setActiveTab] = useState<'average' | 'my-schemas' | 'public-schemas'>(
     'average',
   );
@@ -235,13 +230,12 @@ export default function AverageCalculatorScreen() {
     if (average >= 13.5)
       return {
         label: 'Excellent',
-        color: Colors.light.success,
-        bgColor: `${Colors.light.success}20`,
+        color: c.success,
+        bgColor: `${c.success}20`,
       };
-    if (average >= 11.5) return { label: 'Good', color: PrimaryBlue, bgColor: `${PrimaryBlue}20` };
-    if (average >= 10)
-      return { label: 'Enough', color: Colors.light.warning, bgColor: `${Colors.light.warning}20` };
-    return { label: 'Fail', color: Colors.light.error, bgColor: `${Colors.light.error}20` };
+    if (average >= 11.5) return { label: 'Good', color: c.primary, bgColor: `${c.primary}20` };
+    if (average >= 10) return { label: 'Enough', color: c.warning, bgColor: `${c.warning}20` };
+    return { label: 'Fail', color: c.error, bgColor: `${c.error}20` };
   };
 
   const updateGrade = useCallback(
@@ -532,13 +526,18 @@ export default function AverageCalculatorScreen() {
             <Text style={styles.schemaName}>{schema.name}</Text>
             <View style={styles.schemaIcons}>
               {schema.is_public && (
-                <Ionicons name="globe" size={16} color={Colors.light.success} style={styles.icon} />
+                <Ionicons name="globe" size={16} color={c.success} style={styles.icon} />
               )}
               {!schema.is_public && (schema.creator || schema.created_by) && (
-                <Ionicons name="lock-closed" size={16} color={TextSecondary} style={styles.icon} />
+                <Ionicons
+                  name="lock-closed"
+                  size={16}
+                  color={c.textSecondary}
+                  style={styles.icon}
+                />
               )}
               {schema.is_saved_by_user && (
-                <Ionicons name="heart" size={16} color={Colors.light.error} style={styles.icon} />
+                <Ionicons name="heart" size={16} color={c.error} style={styles.icon} />
               )}
             </View>
           </View>
@@ -602,7 +601,7 @@ export default function AverageCalculatorScreen() {
             <Ionicons
               name={schema.is_saved_by_user ? 'heart' : 'heart-outline'}
               size={20}
-              color={schema.is_saved_by_user ? Colors.light.error : TextSecondary}
+              color={schema.is_saved_by_user ? c.error : c.textSecondary}
             />
           </TouchableOpacity>
         )}
@@ -610,11 +609,11 @@ export default function AverageCalculatorScreen() {
           <>
             {schema.is_saved_by_user && (
               <TouchableOpacity onPress={() => unsaveSchema(schema.id)} style={styles.iconButton}>
-                <Ionicons name="heart-dislike" size={20} color={Colors.light.error} />
+                <Ionicons name="heart-dislike" size={20} color={c.error} />
               </TouchableOpacity>
             )}
             <TouchableOpacity onPress={() => deleteSchema(schema.id)} style={styles.iconButton}>
-              <Ionicons name="trash" size={20} color={Colors.light.error} />
+              <Ionicons name="trash" size={20} color={c.error} />
             </TouchableOpacity>
           </>
         )}
@@ -656,7 +655,7 @@ export default function AverageCalculatorScreen() {
         >
           {loading && !currentUserSchemaGrades ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={PrimaryBlue} />
+              <ActivityIndicator size="large" color={c.primary} />
             </View>
           ) : (
             <View style={styles.averageContent}>
@@ -666,7 +665,7 @@ export default function AverageCalculatorScreen() {
                   <View style={styles.schemaHeaderRow}>
                     <Text style={styles.sectionTitle}>Schema</Text>
                     <TouchableOpacity onPress={createNewSchema} style={styles.newSchemaButton}>
-                      <Ionicons name="add-circle" size={24} color={PrimaryBlue} />
+                      <Ionicons name="add-circle" size={24} color={c.primary} />
                       <Text style={styles.newSchemaText}>New Schema</Text>
                     </TouchableOpacity>
                   </View>
@@ -707,7 +706,7 @@ export default function AverageCalculatorScreen() {
                             <View style={styles.fieldsHeader}>
                               <Text style={styles.fieldsTitle}>Fields</Text>
                               <TouchableOpacity onPress={addField} style={styles.addFieldButton}>
-                                <Ionicons name="add-circle" size={20} color={PrimaryBlue} />
+                                <Ionicons name="add-circle" size={20} color={c.primary} />
                               </TouchableOpacity>
                             </View>
 
@@ -720,11 +719,7 @@ export default function AverageCalculatorScreen() {
                                       onPress={() => removeField(index)}
                                       style={styles.removeButton}
                                     >
-                                      <Ionicons
-                                        name="close-circle"
-                                        size={20}
-                                        color={Colors.light.error}
-                                      />
+                                      <Ionicons name="close-circle" size={20} color={c.error} />
                                     </TouchableOpacity>
                                   )}
                                 </View>
@@ -803,10 +798,7 @@ export default function AverageCalculatorScreen() {
                                       </View>
                                       {isSaving && (
                                         <View style={styles.savingIndicator}>
-                                          <ActivityIndicator
-                                            size="small"
-                                            color={Colors.light.warning}
-                                          />
+                                          <ActivityIndicator size="small" color={c.warning} />
                                         </View>
                                       )}
                                     </View>
@@ -832,7 +824,7 @@ export default function AverageCalculatorScreen() {
                     </>
                   ) : (
                     <Card style={styles.emptyCard}>
-                      <Ionicons name="calculator-outline" size={48} color={TextSecondary} />
+                      <Ionicons name="calculator-outline" size={48} color={c.textSecondary} />
                       <Text style={styles.emptyText}>No schema loaded</Text>
                       <Text style={styles.emptySubtext}>
                         Create a new schema or use one from My Schemas or Public Schemas
@@ -924,14 +916,14 @@ export default function AverageCalculatorScreen() {
 
           {loading && filteredSchemas.length === 0 ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={PrimaryBlue} />
+              <ActivityIndicator size="large" color={c.primary} />
             </View>
           ) : filteredSchemas.length === 0 ? (
             <Card style={styles.emptyCard}>
               <Ionicons
                 name={activeTab === 'public-schemas' ? 'globe-outline' : 'document-text-outline'}
                 size={48}
-                color={TextSecondary}
+                color={c.textSecondary}
               />
               <Text style={styles.emptyText}>
                 {activeTab === 'public-schemas'
@@ -969,7 +961,7 @@ export default function AverageCalculatorScreen() {
               ListFooterComponent={
                 activeTab === 'public-schemas' && loading && filteredSchemas.length > 0 ? (
                   <View style={styles.footerLoading}>
-                    <ActivityIndicator size="small" color={PrimaryBlue} />
+                    <ActivityIndicator size="small" color={c.primary} />
                   </View>
                 ) : null
               }
@@ -983,411 +975,412 @@ export default function AverageCalculatorScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  headerBar: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.borderSubtle,
-  },
-  screenTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 12,
-    letterSpacing: -0.3,
-  },
-  tabs: {
-    flexDirection: 'row',
-    gap: 4,
-    marginBottom: 10,
-  },
-  tab: {
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    borderRadius: RadiusFull,
-  },
-  tabActive: {
-    backgroundColor: '#E8EDFB',
-  },
-  tabText: {
-    fontSize: 13,
-    color: TextSecondary,
-    fontWeight: '600',
-  },
-  tabTextActive: {
-    color: PrimaryBlue,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 200,
-  },
-  averageContent: {
-    padding: 16,
-  },
-  inputSection: {
-    marginBottom: 16,
-  },
-  inputCard: {
-    padding: 20,
-  },
-  schemaHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: TextPrimary,
-    letterSpacing: -0.2,
-  },
-  newSchemaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  newSchemaText: {
-    fontSize: 14,
-    color: PrimaryBlue,
-    fontWeight: '600',
-  },
-  input: {
-    marginBottom: 16,
-  },
-  fieldsSection: {
-    marginTop: 8,
-  },
-  fieldsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  fieldsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-  },
-  addFieldButton: {
-    padding: 4,
-  },
-  fieldCard: {
-    marginBottom: 12,
-    padding: 16,
-  },
-  fieldHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  fieldNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: TextPrimary,
-  },
-  removeButton: {
-    padding: 4,
-  },
-  gradesSection: {
-    marginTop: 16,
-  },
-  gradesTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 12,
-  },
-  gradeCard: {
-    marginBottom: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-  },
-  gradeCardSaving: {
-    backgroundColor: '#FEF3C7',
-    borderColor: Colors.light.warning,
-  },
-  gradeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  gradeFieldName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginBottom: 4,
-  },
-  gradeWeight: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  savingIndicator: {
-    padding: 4,
-  },
-  gradeInput: {
-    marginBottom: 0,
-  },
-  gradeInputSaving: {
-    borderColor: Colors.light.warning,
-  },
-  savingText: {
-    fontSize: 12,
-    color: Colors.light.warning,
-    marginTop: 4,
-    fontStyle: 'italic',
-  },
-  saveButton: {
-    marginTop: 16,
-  },
-  resultsSection: {
-    marginTop: 16,
-  },
-  resultCard: {
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 16,
-    backgroundColor: '#E8EDFB',
-  },
-  resultLabel: {
-    fontSize: 13,
-    color: TextSecondary,
-    marginBottom: 6,
-    fontWeight: '500',
-    letterSpacing: 0.2,
-  },
-  resultValue: {
-    fontSize: 44,
-    fontWeight: '700',
-    color: PrimaryBlue,
-    marginBottom: 10,
-    letterSpacing: -1,
-  },
-  statusBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  statsCard: {
-    padding: 20,
-  },
-  statsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: TextPrimary,
-    marginBottom: 16,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: TextPrimary,
-  },
-  schemasView: {
-    flex: 1,
-  },
-  searchCard: {
-    margin: 16,
-    marginBottom: 8,
-    padding: 12,
-  },
-  searchInput: {
-    marginBottom: 0,
-  },
-  listContent: {
-    padding: 16,
-    paddingTop: 8,
-  },
-  schemaCard: {
-    marginBottom: 16,
-    padding: 20,
-  },
-  schemaHeader: {
-    marginBottom: 12,
-  },
-  schemaInfo: {
-    flex: 1,
-  },
-  schemaNameRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 4,
-    flexWrap: 'wrap',
-  },
-  schemaName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginRight: 8,
-    flexShrink: 1,
-    letterSpacing: -0.2,
-  },
-  schemaIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    flexShrink: 0,
-  },
-  icon: {
-    marginLeft: 0,
-  },
-  creatorName: {
-    fontSize: 12,
-    color: TextSecondary,
-    marginBottom: 4,
-  },
-  schemaDescription: {
-    fontSize: 14,
-    color: TextSecondary,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  schemaStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statText: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  statSeparator: {
-    fontSize: 12,
-    color: TextSecondary,
-  },
-  fieldsPreview: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.borderSubtle,
-  },
-  fieldsPreviewTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginBottom: 8,
-  },
-  fieldPreviewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  fieldPreviewName: {
-    fontSize: 12,
-    color: TextSecondary,
-    flex: 1,
-  },
-  fieldPreviewWeight: {
-    fontSize: 12,
-    color: TextSecondary,
-    marginLeft: 8,
-  },
-  moreFields: {
-    fontSize: 12,
-    color: TextSecondary,
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
-  schemaActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.borderSubtle,
-  },
-  useButton: {
-    flex: 1,
-  },
-  iconButton: {
-    padding: 8,
-  },
-  emptyCard: {
-    padding: 48,
-    alignItems: 'center',
-    margin: 16,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginTop: 14,
-    marginBottom: 6,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: TextSecondary,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  createButton: {
-    marginTop: 8,
-  },
-  footerLoading: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  readOnlySchema: {
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-  },
-  readOnlyLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: TextSecondary,
-    marginBottom: 6,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  readOnlyValue: {
-    fontSize: 16,
-    color: TextPrimary,
-    lineHeight: 24,
-  },
-  readOnlyField: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: Colors.light.subtle,
-    borderRadius: RadiusMedium,
-    marginBottom: 8,
-  },
-  readOnlyFieldName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: TextPrimary,
-    flex: 1,
-  },
-  readOnlyFieldWeight: {
-    fontSize: 14,
-    color: TextSecondary,
-    marginLeft: 12,
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    headerBar: {
+      backgroundColor: c.card,
+      paddingHorizontal: 20,
+      paddingBottom: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: c.borderSubtle,
+    },
+    screenTitle: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 12,
+      letterSpacing: -0.3,
+    },
+    tabs: {
+      flexDirection: 'row',
+      gap: 4,
+      marginBottom: 10,
+    },
+    tab: {
+      paddingVertical: 7,
+      paddingHorizontal: 14,
+      borderRadius: RadiusFull,
+    },
+    tabActive: {
+      backgroundColor: c.primaryTint,
+    },
+    tabText: {
+      fontSize: 13,
+      color: c.textSecondary,
+      fontWeight: '600',
+    },
+    tabTextActive: {
+      color: c.primary,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: 200,
+    },
+    averageContent: {
+      padding: 16,
+    },
+    inputSection: {
+      marginBottom: 16,
+    },
+    inputCard: {
+      padding: 20,
+    },
+    schemaHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: c.text,
+      letterSpacing: -0.2,
+    },
+    newSchemaButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    newSchemaText: {
+      fontSize: 14,
+      color: c.primary,
+      fontWeight: '600',
+    },
+    input: {
+      marginBottom: 16,
+    },
+    fieldsSection: {
+      marginTop: 8,
+    },
+    fieldsHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    fieldsTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+    },
+    addFieldButton: {
+      padding: 4,
+    },
+    fieldCard: {
+      marginBottom: 12,
+      padding: 16,
+    },
+    fieldHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    fieldNumber: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: c.text,
+    },
+    removeButton: {
+      padding: 4,
+    },
+    gradesSection: {
+      marginTop: 16,
+    },
+    gradesTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 12,
+    },
+    gradeCard: {
+      marginBottom: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    gradeCardSaving: {
+      backgroundColor: c.warningTint,
+      borderColor: c.warning,
+    },
+    gradeHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 12,
+    },
+    gradeFieldName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 4,
+    },
+    gradeWeight: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    savingIndicator: {
+      padding: 4,
+    },
+    gradeInput: {
+      marginBottom: 0,
+    },
+    gradeInputSaving: {
+      borderColor: c.warning,
+    },
+    savingText: {
+      fontSize: 12,
+      color: c.warning,
+      marginTop: 4,
+      fontStyle: 'italic',
+    },
+    saveButton: {
+      marginTop: 16,
+    },
+    resultsSection: {
+      marginTop: 16,
+    },
+    resultCard: {
+      padding: 24,
+      alignItems: 'center',
+      marginBottom: 16,
+      backgroundColor: c.primaryTint,
+    },
+    resultLabel: {
+      fontSize: 13,
+      color: c.textSecondary,
+      marginBottom: 6,
+      fontWeight: '500',
+      letterSpacing: 0.2,
+    },
+    resultValue: {
+      fontSize: 44,
+      fontWeight: '700',
+      color: c.primary,
+      marginBottom: 10,
+      letterSpacing: -1,
+    },
+    statusBadge: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    statsCard: {
+      padding: 20,
+    },
+    statsTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: c.text,
+      marginBottom: 16,
+    },
+    statRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    statLabel: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    statValue: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: c.text,
+    },
+    schemasView: {
+      flex: 1,
+    },
+    searchCard: {
+      margin: 16,
+      marginBottom: 8,
+      padding: 12,
+    },
+    searchInput: {
+      marginBottom: 0,
+    },
+    listContent: {
+      padding: 16,
+      paddingTop: 8,
+    },
+    schemaCard: {
+      marginBottom: 16,
+      padding: 20,
+    },
+    schemaHeader: {
+      marginBottom: 12,
+    },
+    schemaInfo: {
+      flex: 1,
+    },
+    schemaNameRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginBottom: 4,
+      flexWrap: 'wrap',
+    },
+    schemaName: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+      marginRight: 8,
+      flexShrink: 1,
+      letterSpacing: -0.2,
+    },
+    schemaIcons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      flexShrink: 0,
+    },
+    icon: {
+      marginLeft: 0,
+    },
+    creatorName: {
+      fontSize: 12,
+      color: c.textSecondary,
+      marginBottom: 4,
+    },
+    schemaDescription: {
+      fontSize: 14,
+      color: c.textSecondary,
+      marginBottom: 8,
+      lineHeight: 20,
+    },
+    schemaStats: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    statText: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    statSeparator: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    fieldsPreview: {
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.borderSubtle,
+    },
+    fieldsPreviewTitle: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 8,
+    },
+    fieldPreviewRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    fieldPreviewName: {
+      fontSize: 12,
+      color: c.textSecondary,
+      flex: 1,
+    },
+    fieldPreviewWeight: {
+      fontSize: 12,
+      color: c.textSecondary,
+      marginLeft: 8,
+    },
+    moreFields: {
+      fontSize: 12,
+      color: c.textSecondary,
+      fontStyle: 'italic',
+      marginTop: 4,
+    },
+    schemaActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.borderSubtle,
+    },
+    useButton: {
+      flex: 1,
+    },
+    iconButton: {
+      padding: 8,
+    },
+    emptyCard: {
+      padding: 48,
+      alignItems: 'center',
+      margin: 16,
+    },
+    emptyText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+      marginTop: 14,
+      marginBottom: 6,
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: c.textSecondary,
+      textAlign: 'center',
+      marginBottom: 24,
+    },
+    createButton: {
+      marginTop: 8,
+    },
+    footerLoading: {
+      paddingVertical: 20,
+      alignItems: 'center',
+    },
+    readOnlySchema: {
+      marginBottom: 20,
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    readOnlyLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.textSecondary,
+      marginBottom: 6,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    readOnlyValue: {
+      fontSize: 16,
+      color: c.text,
+      lineHeight: 24,
+    },
+    readOnlyField: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      backgroundColor: c.subtle,
+      borderRadius: RadiusMedium,
+      marginBottom: 8,
+    },
+    readOnlyFieldName: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: c.text,
+      flex: 1,
+    },
+    readOnlyFieldWeight: {
+      fontSize: 14,
+      color: c.textSecondary,
+      marginLeft: 12,
+    },
+  });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,17 +13,14 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import { useThemedColors } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  TextTertiary,
-  PrimaryBlue,
-} from '@/constants/theme';
+import { ThemeColors } from '@/constants/theme';
 
 export default function SignUpScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -144,7 +141,7 @@ export default function SignUpScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
-            leftIcon={<Ionicons name="mail-outline" size={18} color={TextTertiary} />}
+            leftIcon={<Ionicons name="mail-outline" size={18} color={c.textTertiary} />}
             error={errors.email}
           />
 
@@ -159,7 +156,7 @@ export default function SignUpScreen() {
             secureTextEntry={!showPassword}
             autoCapitalize="none"
             autoComplete="password-new"
-            leftIcon={<Ionicons name="lock-closed-outline" size={18} color={TextTertiary} />}
+            leftIcon={<Ionicons name="lock-closed-outline" size={18} color={c.textTertiary} />}
             rightIcon={
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -169,7 +166,7 @@ export default function SignUpScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={18}
-                  color={TextTertiary}
+                  color={c.textTertiary}
                 />
               </TouchableOpacity>
             }
@@ -187,7 +184,7 @@ export default function SignUpScreen() {
             secureTextEntry={!showConfirmPassword}
             autoCapitalize="none"
             autoComplete="password-new"
-            leftIcon={<Ionicons name="lock-closed-outline" size={18} color={TextTertiary} />}
+            leftIcon={<Ionicons name="lock-closed-outline" size={18} color={c.textTertiary} />}
             rightIcon={
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -197,7 +194,7 @@ export default function SignUpScreen() {
                 <Ionicons
                   name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={18}
-                  color={TextTertiary}
+                  color={c.textTertiary}
                 />
               </TouchableOpacity>
             }
@@ -224,60 +221,61 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-  },
-  content: {
-    width: '100%',
-    maxWidth: 400,
-    alignSelf: 'center',
-  },
-  headerSection: {
-    marginBottom: 28,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 6,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: TextSecondary,
-    lineHeight: 21,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  nameField: {
-    flex: 1,
-  },
-  nameInput: {
-    marginBottom: 16,
-  },
-  submitButton: {
-    marginTop: 8,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 28,
-  },
-  footerText: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  footerLink: {
-    fontSize: 14,
-    color: PrimaryBlue,
-    fontWeight: '600',
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 24,
+    },
+    content: {
+      width: '100%',
+      maxWidth: 400,
+      alignSelf: 'center',
+    },
+    headerSection: {
+      marginBottom: 28,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 6,
+      letterSpacing: -0.5,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: c.textSecondary,
+      lineHeight: 21,
+    },
+    nameRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    nameField: {
+      flex: 1,
+    },
+    nameInput: {
+      marginBottom: 16,
+    },
+    submitButton: {
+      marginTop: 8,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: 28,
+    },
+    footerText: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    footerLink: {
+      fontSize: 14,
+      color: c.primary,
+      fontWeight: '600',
+    },
+  });

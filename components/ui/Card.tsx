@@ -1,6 +1,7 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useMemo } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { Colors, RadiusMedium, RadiusLarge, ShadowLight } from '@/constants/theme';
+import { RadiusMedium, RadiusLarge, ShadowLight, ThemeColors } from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
 
 interface CardProps {
   children: ReactNode;
@@ -18,6 +19,8 @@ export const Card: React.FC<CardProps> = ({
   radius = 'md',
   shadow = true,
 }) => {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   return (
     <View
       style={[
@@ -33,31 +36,32 @@ export const Card: React.FC<CardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.light.card,
-    borderWidth: 1,
-    borderColor: Colors.light.borderSubtle,
-  },
-  padding_sm: {
-    padding: 12,
-  },
-  padding_md: {
-    padding: 16,
-  },
-  padding_lg: {
-    padding: 24,
-  },
-  radius_sm: {
-    borderRadius: RadiusMedium,
-  },
-  radius_md: {
-    borderRadius: RadiusMedium,
-  },
-  radius_lg: {
-    borderRadius: RadiusLarge,
-  },
-  shadow: {
-    ...ShadowLight,
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: c.card,
+      borderWidth: 1,
+      borderColor: c.borderSubtle,
+    },
+    padding_sm: {
+      padding: 12,
+    },
+    padding_md: {
+      padding: 16,
+    },
+    padding_lg: {
+      padding: 24,
+    },
+    radius_sm: {
+      borderRadius: RadiusMedium,
+    },
+    radius_md: {
+      borderRadius: RadiusMedium,
+    },
+    radius_lg: {
+      borderRadius: RadiusLarge,
+    },
+    shadow: {
+      ...ShadowLight,
+    },
+  });

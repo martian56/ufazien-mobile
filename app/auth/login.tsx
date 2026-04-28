@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,18 +13,15 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import { useThemedColors } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Checkbox } from '@/components/ui/Checkbox';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  TextTertiary,
-  PrimaryBlue,
-} from '@/constants/theme';
+import { ThemeColors } from '@/constants/theme';
 
 export default function LoginScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -100,7 +97,7 @@ export default function LoginScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
-            leftIcon={<Ionicons name="mail-outline" size={18} color={TextTertiary} />}
+            leftIcon={<Ionicons name="mail-outline" size={18} color={c.textTertiary} />}
             error={errors.email}
           />
 
@@ -115,7 +112,7 @@ export default function LoginScreen() {
             secureTextEntry={!showPassword}
             autoCapitalize="none"
             autoComplete="password"
-            leftIcon={<Ionicons name="lock-closed-outline" size={18} color={TextTertiary} />}
+            leftIcon={<Ionicons name="lock-closed-outline" size={18} color={c.textTertiary} />}
             rightIcon={
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -125,7 +122,7 @@ export default function LoginScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={18}
-                  color={TextTertiary}
+                  color={c.textTertiary}
                 />
               </TouchableOpacity>
             }
@@ -163,71 +160,72 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-  },
-  content: {
-    width: '100%',
-    maxWidth: 400,
-    alignSelf: 'center',
-  },
-  headerSection: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 6,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: TextSecondary,
-    lineHeight: 21,
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  rememberMe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  rememberText: {
-    fontSize: 13,
-    color: TextSecondary,
-  },
-  forgotText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: PrimaryBlue,
-  },
-  submitButton: {
-    marginTop: 20,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 28,
-  },
-  footerText: {
-    fontSize: 14,
-    color: TextSecondary,
-  },
-  footerLink: {
-    fontSize: 14,
-    color: PrimaryBlue,
-    fontWeight: '600',
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 24,
+    },
+    content: {
+      width: '100%',
+      maxWidth: 400,
+      alignSelf: 'center',
+    },
+    headerSection: {
+      marginBottom: 32,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 6,
+      letterSpacing: -0.5,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: c.textSecondary,
+      lineHeight: 21,
+    },
+    optionsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 4,
+      marginBottom: 4,
+    },
+    rememberMe: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    rememberText: {
+      fontSize: 13,
+      color: c.textSecondary,
+    },
+    forgotText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: c.primary,
+    },
+    submitButton: {
+      marginTop: 20,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: 28,
+    },
+    footerText: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    footerLink: {
+      fontSize: 14,
+      color: c.primary,
+      fontWeight: '600',
+    },
+  });

@@ -3,11 +3,12 @@ import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { PrimaryBlue } from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
 
 export default function Index() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const c = useThemedColors();
 
   useEffect(() => {
     if (!isLoading) {
@@ -20,8 +21,8 @@ export default function Index() {
   }, [isAuthenticated, isLoading, router]);
 
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color={PrimaryBlue} />
+    <View style={[styles.container, { backgroundColor: c.background }]}>
+      <ActivityIndicator size="large" color={c.primary} />
     </View>
   );
 }

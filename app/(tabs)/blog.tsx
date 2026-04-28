@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,16 +17,8 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Toast } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  TextTertiary,
-  PrimaryBlue,
-  Colors,
-  RadiusFull,
-  ShadowLight,
-} from '@/constants/theme';
+import { useThemedColors } from '@/contexts/ThemeContext';
+import { RadiusFull, ShadowLight, ThemeColors } from '@/constants/theme';
 
 import apiClient from '@/config/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,6 +59,8 @@ interface Category {
 }
 
 export default function BlogScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
@@ -273,14 +267,14 @@ export default function BlogScreen() {
               <Ionicons
                 name={item.is_liked ? 'heart' : 'heart-outline'}
                 size={16}
-                color={item.is_liked ? Colors.light.error : TextTertiary}
+                color={item.is_liked ? c.error : c.textTertiary}
               />
-              <Text style={[styles.statNum, item.is_liked && { color: Colors.light.error }]}>
+              <Text style={[styles.statNum, item.is_liked && { color: c.error }]}>
                 {item.likes_count}
               </Text>
             </TouchableOpacity>
             <View style={styles.statBtn}>
-              <Ionicons name="chatbubble-outline" size={15} color={TextTertiary} />
+              <Ionicons name="chatbubble-outline" size={15} color={c.textTertiary} />
               <Text style={styles.statNum}>{item.comments_count}</Text>
             </View>
             <TouchableOpacity
@@ -291,7 +285,7 @@ export default function BlogScreen() {
               <Ionicons
                 name={item.is_bookmarked ? 'bookmark' : 'bookmark-outline'}
                 size={16}
-                color={item.is_bookmarked ? PrimaryBlue : TextTertiary}
+                color={item.is_bookmarked ? c.primary : c.textTertiary}
               />
             </TouchableOpacity>
           </View>
@@ -319,7 +313,7 @@ export default function BlogScreen() {
           placeholder="Search posts..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          leftIcon={<Ionicons name="search" size={18} color={TextTertiary} />}
+          leftIcon={<Ionicons name="search" size={18} color={c.textTertiary} />}
           containerStyle={styles.searchWrap}
         />
 
@@ -391,7 +385,7 @@ export default function BlogScreen() {
       {/* Posts */}
       {loading && posts.length === 0 ? (
         <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color={PrimaryBlue} />
+          <ActivityIndicator size="large" color={c.primary} />
         </View>
       ) : (
         <FlatList
@@ -399,17 +393,23 @@ export default function BlogScreen() {
           renderItem={renderPost}
           keyExtractor={(item, index) => item.id?.toString() || `post-${index}`}
           contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 16 }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={c.primary}
+            />
+          }
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
             loading && posts.length > 0 ? (
-              <ActivityIndicator size="small" color={PrimaryBlue} style={{ marginVertical: 16 }} />
+              <ActivityIndicator size="small" color={c.primary} style={{ marginVertical: 16 }} />
             ) : null
           }
           ListEmptyComponent={
             <View style={styles.emptyWrap}>
-              <Ionicons name="document-text-outline" size={40} color={TextTertiary} />
+              <Ionicons name="document-text-outline" size={40} color={c.textTertiary} />
               <Text style={styles.emptyTitle}>No posts found</Text>
               <Text style={styles.emptyDesc}>
                 {activeTab === 'bookmarked'
@@ -428,179 +428,180 @@ export default function BlogScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  header: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.borderSubtle,
-  },
-  screenTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 14,
-    letterSpacing: -0.3,
-  },
-  searchWrap: {
-    marginBottom: 8,
-  },
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    header: {
+      backgroundColor: c.card,
+      paddingHorizontal: 20,
+      paddingBottom: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: c.borderSubtle,
+    },
+    screenTitle: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 14,
+      letterSpacing: -0.3,
+    },
+    searchWrap: {
+      marginBottom: 8,
+    },
 
-  // Tabs
-  tabs: {
-    flexDirection: 'row',
-    gap: 4,
-    marginBottom: 10,
-  },
-  tab: {
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    borderRadius: RadiusFull,
-  },
-  tabActive: {
-    backgroundColor: '#E8EDFB',
-  },
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: TextSecondary,
-  },
-  tabTextActive: {
-    color: PrimaryBlue,
-  },
+    // Tabs
+    tabs: {
+      flexDirection: 'row',
+      gap: 4,
+      marginBottom: 10,
+    },
+    tab: {
+      paddingVertical: 7,
+      paddingHorizontal: 14,
+      borderRadius: RadiusFull,
+    },
+    tabActive: {
+      backgroundColor: c.primaryTint,
+    },
+    tabText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: c.textSecondary,
+    },
+    tabTextActive: {
+      color: c.primary,
+    },
 
-  // Filters
-  filtersRow: {
-    paddingBottom: 10,
-    gap: 6,
-    alignItems: 'center',
-  },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: RadiusFull,
-    backgroundColor: Colors.light.subtle,
-  },
-  chipActive: {
-    backgroundColor: PrimaryBlue,
-  },
-  chipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: TextSecondary,
-  },
-  chipTextActive: {
-    color: '#FFFFFF',
-  },
-  chipSeparator: {
-    width: 1,
-    height: 16,
-    backgroundColor: Colors.light.border,
-    marginHorizontal: 4,
-  },
+    // Filters
+    filtersRow: {
+      paddingBottom: 10,
+      gap: 6,
+      alignItems: 'center',
+    },
+    chip: {
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: RadiusFull,
+      backgroundColor: c.subtle,
+    },
+    chipActive: {
+      backgroundColor: c.primary,
+    },
+    chipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.textSecondary,
+    },
+    chipTextActive: {
+      color: '#FFFFFF',
+    },
+    chipSeparator: {
+      width: 1,
+      height: 16,
+      backgroundColor: c.border,
+      marginHorizontal: 4,
+    },
 
-  // Posts
-  listContent: {
-    padding: 20,
-    paddingTop: 12,
-  },
-  postCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.borderSubtle,
-    ...ShadowLight,
-  },
-  postTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: TextPrimary,
-    lineHeight: 22,
-    marginBottom: 6,
-    letterSpacing: -0.2,
-  },
-  postExcerpt: {
-    fontSize: 14,
-    color: TextSecondary,
-    lineHeight: 20,
-    marginBottom: 10,
-  },
-  tagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 12,
-  },
-  postFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.borderSubtle,
-  },
-  authorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  authorInfo: {
-    marginLeft: 8,
-    flex: 1,
-  },
-  authorName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: TextPrimary,
-  },
-  readTime: {
-    fontSize: 11,
-    color: TextTertiary,
-    marginTop: 1,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  statBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  statNum: {
-    fontSize: 12,
-    color: TextTertiary,
-    fontWeight: '500',
-  },
+    // Posts
+    listContent: {
+      padding: 20,
+      paddingTop: 12,
+    },
+    postCard: {
+      backgroundColor: c.cardElevated,
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: c.borderSubtle,
+      ...ShadowLight,
+    },
+    postTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+      lineHeight: 22,
+      marginBottom: 6,
+      letterSpacing: -0.2,
+    },
+    postExcerpt: {
+      fontSize: 14,
+      color: c.textSecondary,
+      lineHeight: 20,
+      marginBottom: 10,
+    },
+    tagsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginBottom: 12,
+    },
+    postFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.borderSubtle,
+    },
+    authorRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    authorInfo: {
+      marginLeft: 8,
+      flex: 1,
+    },
+    authorName: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: c.text,
+    },
+    readTime: {
+      fontSize: 11,
+      color: c.textTertiary,
+      marginTop: 1,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    statBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+    },
+    statNum: {
+      fontSize: 12,
+      color: c.textTertiary,
+      fontWeight: '500',
+    },
 
-  // Empty / Loading
-  loadingWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyWrap: {
-    alignItems: 'center',
-    paddingVertical: 48,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  emptyDesc: {
-    fontSize: 14,
-    color: TextSecondary,
-    textAlign: 'center',
-  },
-});
+    // Empty / Loading
+    loadingWrap: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyWrap: {
+      alignItems: 'center',
+      paddingVertical: 48,
+    },
+    emptyTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: c.text,
+      marginTop: 12,
+      marginBottom: 4,
+    },
+    emptyDesc: {
+      fontSize: 14,
+      color: c.textSecondary,
+      textAlign: 'center',
+    },
+  });

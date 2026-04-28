@@ -1,5 +1,5 @@
 // Settings Screen - Full Implementation with 6 Tabs
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -26,16 +26,8 @@ import { Switch } from '@/components/ui/Switch';
 import { Avatar } from '@/components/ui/Avatar';
 import { Toast } from '@/components/ui/Toast';
 import { useToast } from '@/hooks/useToast';
-import {
-  BackgroundPrimary,
-  TextPrimary,
-  TextSecondary,
-  TextTertiary,
-  PrimaryBlue,
-  Colors,
-  RadiusMedium,
-  RadiusFull,
-} from '@/constants/theme';
+import { useThemedColors, useTheme, ThemePreference } from '@/contexts/ThemeContext';
+import { RadiusMedium, RadiusFull, ThemeColors } from '@/constants/theme';
 import apiClient from '@/config/api';
 import { majorOptions } from '@/utils/majorUtils';
 
@@ -103,6 +95,9 @@ interface AppearanceSettings {
 }
 
 export default function SettingsScreen() {
+  const c = useThemedColors();
+  const styles = useMemo(() => makeStyles(c), [c]);
+  const { preference: themePreference, setPreference: setThemePreference } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, logout, refreshUser, updateUser } = useAuth();
@@ -679,26 +674,71 @@ export default function SettingsScreen() {
 
   const renderPrivacyTab = () => (
     <View style={styles.placeholderContainer}>
-      <Ionicons name="lock-closed-outline" size={40} color={TextTertiary} />
+      <Ionicons name="lock-closed-outline" size={40} color={c.textTertiary} />
       <Text style={styles.placeholderTitle}>Privacy Settings</Text>
       <Text style={styles.placeholderText}>This section is under development</Text>
     </View>
   );
 
-  const renderAppearanceTab = () => (
-    <View style={styles.placeholderContainer}>
-      <Ionicons name="color-palette-outline" size={40} color={TextTertiary} />
-      <Text style={styles.placeholderTitle}>Appearance Settings</Text>
-      <Text style={styles.placeholderText}>This section is under development</Text>
-    </View>
-  );
+  const renderAppearanceTab = () => {
+    const themeOptions: { value: ThemePreference; label: string; icon: string }[] = [
+      { value: 'light', label: 'Light', icon: 'sunny' },
+      { value: 'dark', label: 'Dark', icon: 'moon' },
+      { value: 'system', label: 'System', icon: 'phone-portrait' },
+    ];
+
+    return (
+      <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+        <Card style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Theme</Text>
+          <Text style={styles.sectionDescription}>
+            Choose how Ufazien looks to you. Select system to match your device.
+          </Text>
+          <View style={styles.themeOptions}>
+            {themeOptions.map((option) => {
+              const isActive = themePreference === option.value;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  onPress={() => setThemePreference(option.value)}
+                  style={[styles.themeOption, isActive && styles.themeOptionActive]}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.themeOptionIcon, isActive && styles.themeOptionIconActive]}>
+                    <Ionicons
+                      name={option.icon as any}
+                      size={22}
+                      color={isActive ? c.primary : c.textSecondary}
+                    />
+                  </View>
+                  <Text
+                    style={[styles.themeOptionLabel, isActive && styles.themeOptionLabelActive]}
+                  >
+                    {option.label}
+                  </Text>
+                  {isActive && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={18}
+                      color={c.primary}
+                      style={styles.themeOptionCheck}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Card>
+      </ScrollView>
+    );
+  };
 
   const renderSecurityTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       {!hasPassword ? (
         <Card style={[styles.sectionCard, styles.warningCard]}>
           <View style={styles.warningHeader}>
-            <Ionicons name="lock-closed" size={24} color={Colors.light.warning} />
+            <Ionicons name="lock-closed" size={24} color={c.warning} />
             <Text style={styles.warningTitle}>Set Up Password for CLI Access</Text>
           </View>
           <Text style={styles.warningText}>
@@ -729,7 +769,7 @@ export default function SettingsScreen() {
       ) : (
         <Card style={[styles.sectionCard, styles.successCard]}>
           <View style={styles.successHeader}>
-            <Ionicons name="checkmark-circle" size={24} color={Colors.light.success} />
+            <Ionicons name="checkmark-circle" size={24} color={c.success} />
             <Text style={styles.successTitle}>Password Set</Text>
           </View>
           <Text style={styles.successText}>
@@ -785,7 +825,7 @@ export default function SettingsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={PrimaryBlue} />
+        <ActivityIndicator size="large" color={c.primary} />
         <Text style={styles.loadingText}>Loading settings...</Text>
       </View>
     );
@@ -822,7 +862,7 @@ export default function SettingsScreen() {
               <Ionicons
                 name={tab.icon as any}
                 size={20}
-                color={activeTab === tab.id ? PrimaryBlue : TextSecondary}
+                color={activeTab === tab.id ? c.primary : c.textSecondary}
               />
               <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>
                 {tab.name}
@@ -864,247 +904,298 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: BackgroundPrimary,
-  },
-  scrollView: {
-    flexGrow: 0,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: BackgroundPrimary,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 15,
-    color: TextSecondary,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 4,
-    paddingBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: TextPrimary,
-    letterSpacing: -0.3,
-  },
-  tabsScrollView: {
-    borderBottomWidth: 0,
-  },
-  tabsContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    gap: 6,
-  },
-  tab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    gap: 6,
-    borderRadius: RadiusFull,
-    borderBottomWidth: 0,
-  },
-  tabActive: {
-    backgroundColor: '#E8EDFB',
-  },
-  tabText: {
-    fontSize: 13,
-    color: TextSecondary,
-    fontWeight: '600',
-  },
-  tabTextActive: {
-    color: PrimaryBlue,
-  },
-  tabContentContainer: {
-    flex: 1,
-  },
-  tabContent: {
-    flex: 1,
-  },
-  sectionCard: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginBottom: 16,
-    letterSpacing: -0.1,
-  },
-  sectionSubtitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: TextPrimary,
-    marginBottom: 12,
-  },
-  avatarSection: {
-    alignItems: 'center',
-    gap: 14,
-  },
-  uploadButton: {
-    minWidth: 120,
-  },
-  disabledInput: {
-    backgroundColor: Colors.light.subtle,
-    opacity: 0.7,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '30%',
-    padding: 14,
-    alignItems: 'center',
-    gap: 6,
-  },
-  statCardBlue: {
-    backgroundColor: '#E8EDFB',
-  },
-  statCardGreen: {
-    backgroundColor: '#D1FAE5',
-  },
-  statCardPurple: {
-    backgroundColor: '#EDE9FE',
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: TextPrimary,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: TextSecondary,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  radioGroup: {
-    gap: 10,
-  },
-  radioOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderWidth: 1.5,
-    borderColor: Colors.light.border,
-    borderRadius: RadiusMedium,
-    gap: 12,
-  },
-  radioOptionActive: {
-    borderColor: PrimaryBlue,
-    backgroundColor: '#E8EDFB',
-  },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: Colors.light.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioButtonInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: PrimaryBlue,
-  },
-  radioLabel: {
-    fontSize: 15,
-    color: TextPrimary,
-    flex: 1,
-  },
-  warningCard: {
-    backgroundColor: '#FEF3C7',
-    borderColor: '#F59E0B40',
-    borderWidth: 1.5,
-  },
-  warningHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  warningTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: TextPrimary,
-  },
-  warningText: {
-    fontSize: 14,
-    color: TextSecondary,
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  successCard: {
-    backgroundColor: '#D1FAE5',
-    borderColor: '#10B98140',
-    borderWidth: 1.5,
-  },
-  successHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  successTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: TextPrimary,
-  },
-  successText: {
-    fontSize: 14,
-    color: TextSecondary,
-    lineHeight: 20,
-  },
-  placeholderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  placeholderTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: TextPrimary,
-    marginTop: 14,
-    marginBottom: 6,
-  },
-  placeholderText: {
-    fontSize: 14,
-    color: TextSecondary,
-    textAlign: 'center',
-  },
-  footer: {
-    padding: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.borderSubtle,
-    backgroundColor: Colors.light.card,
-    gap: 10,
-  },
-  saveButton: {
-    marginBottom: 0,
-  },
-  logoutButton: {
-    marginTop: 0,
-  },
-  fullWidthButton: {
-    width: '100%',
-  },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    scrollView: {
+      flexGrow: 0,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: c.background,
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: 15,
+      color: c.textSecondary,
+    },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 4,
+      paddingBottom: 8,
+    },
+    headerTitle: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: c.text,
+      letterSpacing: -0.3,
+    },
+    tabsScrollView: {
+      borderBottomWidth: 0,
+    },
+    tabsContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 8,
+      gap: 6,
+    },
+    tab: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 7,
+      paddingHorizontal: 14,
+      gap: 6,
+      borderRadius: RadiusFull,
+      borderBottomWidth: 0,
+    },
+    tabActive: {
+      backgroundColor: c.primaryTint,
+    },
+    tabText: {
+      fontSize: 13,
+      color: c.textSecondary,
+      fontWeight: '600',
+    },
+    tabTextActive: {
+      color: c.primary,
+    },
+    tabContentContainer: {
+      flex: 1,
+    },
+    tabContent: {
+      flex: 1,
+    },
+    sectionCard: {
+      marginHorizontal: 16,
+      marginTop: 12,
+      marginBottom: 4,
+      padding: 20,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 16,
+      letterSpacing: -0.1,
+    },
+    sectionSubtitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 12,
+    },
+    avatarSection: {
+      alignItems: 'center',
+      gap: 14,
+    },
+    uploadButton: {
+      minWidth: 120,
+    },
+    disabledInput: {
+      backgroundColor: c.subtle,
+      opacity: 0.7,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 10,
+    },
+    statCard: {
+      flex: 1,
+      minWidth: '30%',
+      padding: 14,
+      alignItems: 'center',
+      gap: 6,
+    },
+    statCardBlue: {
+      backgroundColor: c.primaryTint,
+    },
+    statCardGreen: {
+      backgroundColor: c.successTint,
+    },
+    statCardPurple: {
+      backgroundColor: c.purpleTint,
+    },
+    statValue: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: c.text,
+    },
+    statLabel: {
+      fontSize: 11,
+      color: c.textSecondary,
+      textAlign: 'center',
+      fontWeight: '500',
+    },
+    radioGroup: {
+      gap: 10,
+    },
+    radioOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 14,
+      borderWidth: 1.5,
+      borderColor: c.border,
+      borderRadius: RadiusMedium,
+      gap: 12,
+    },
+    radioOptionActive: {
+      borderColor: c.primary,
+      backgroundColor: c.primaryTint,
+    },
+    radioButton: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    radioButtonInner: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: c.primary,
+    },
+    radioLabel: {
+      fontSize: 15,
+      color: c.text,
+      flex: 1,
+    },
+    warningCard: {
+      backgroundColor: c.warningTint,
+      borderColor: c.warning + '40',
+      borderWidth: 1.5,
+    },
+    warningHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
+    },
+    warningTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+    },
+    warningText: {
+      fontSize: 14,
+      color: c.textSecondary,
+      marginBottom: 16,
+      lineHeight: 20,
+    },
+    successCard: {
+      backgroundColor: c.successTint,
+      borderColor: c.success + '40',
+      borderWidth: 1.5,
+    },
+    successHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
+    },
+    successTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+    },
+    successText: {
+      fontSize: 14,
+      color: c.textSecondary,
+      lineHeight: 20,
+    },
+    placeholderContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 32,
+    },
+    placeholderTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: c.text,
+      marginTop: 14,
+      marginBottom: 6,
+    },
+    placeholderText: {
+      fontSize: 14,
+      color: c.textSecondary,
+      textAlign: 'center',
+    },
+    footer: {
+      padding: 16,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: c.borderSubtle,
+      backgroundColor: c.card,
+      gap: 10,
+    },
+    saveButton: {
+      marginBottom: 0,
+    },
+    logoutButton: {
+      marginTop: 0,
+    },
+    fullWidthButton: {
+      width: '100%',
+    },
+    sectionDescription: {
+      fontSize: 13,
+      color: c.textSecondary,
+      marginTop: -10,
+      marginBottom: 16,
+      lineHeight: 18,
+    },
+    themeOptions: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    themeOption: {
+      flex: 1,
+      paddingVertical: 14,
+      paddingHorizontal: 10,
+      borderWidth: 1.5,
+      borderColor: c.border,
+      borderRadius: RadiusMedium,
+      alignItems: 'center',
+      gap: 8,
+      position: 'relative',
+    },
+    themeOptionActive: {
+      borderColor: c.primary,
+      backgroundColor: c.primaryTint,
+    },
+    themeOptionIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: c.subtle,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    themeOptionIconActive: {
+      backgroundColor: c.cardElevated,
+    },
+    themeOptionLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: c.textSecondary,
+    },
+    themeOptionLabelActive: {
+      color: c.primary,
+    },
+    themeOptionCheck: {
+      position: 'absolute',
+      top: 6,
+      right: 6,
+    },
+  });
