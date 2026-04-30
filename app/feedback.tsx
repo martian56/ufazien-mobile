@@ -222,6 +222,13 @@ export default function FeedbackScreen() {
     }
   };
 
+  const isFormValid = (): boolean => {
+    if (!selectedType) return false;
+    if (!subject.trim() || subject.trim().length < 5) return false;
+    if (!message.trim() || message.trim().length < 10) return false;
+    return true;
+  };
+
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
@@ -289,7 +296,7 @@ export default function FeedbackScreen() {
     }
   };
 
-  const canSubmit = rateLimit?.can_submit && !loading && validate();
+  const canSubmit = !!rateLimit?.can_submit && !loading && isFormValid();
 
   const renderFeedbackTypeButton = (type: FeedbackType) => {
     const icon = getFeedbackTypeIcon(type.value, c);
