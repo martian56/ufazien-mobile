@@ -17,6 +17,9 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as WebBrowser from 'expo-web-browser';
+import * as StoreReview from 'expo-store-review';
+import Constants from 'expo-constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -672,12 +675,124 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 
+  const openLink = async (url: string) => {
+    try {
+      await WebBrowser.openBrowserAsync(url);
+    } catch (error) {
+      console.error('Error opening browser:', error);
+      showError('Unable to open link');
+    }
+  };
+
+  const handleRateApp = async () => {
+    const fallbackUrl =
+      Platform.OS === 'android'
+        ? 'https://play.google.com/store/apps/details?id=com.ufazien.mobile'
+        : 'https://apps.apple.com/app/id0';
+
+    try {
+      if (await StoreReview.hasAction()) {
+        await StoreReview.requestReview();
+        return;
+      }
+      await WebBrowser.openBrowserAsync(fallbackUrl);
+    } catch (error) {
+      console.error('Error requesting review:', error);
+      try {
+        await WebBrowser.openBrowserAsync(fallbackUrl);
+      } catch {
+        showError('Unable to open review prompt');
+      }
+    }
+  };
+
+  const appVersion = Constants.expoConfig?.version || '1.0.0';
+
   const renderPrivacyTab = () => (
-    <View style={styles.placeholderContainer}>
-      <Ionicons name="lock-closed-outline" size={40} color={c.textTertiary} />
-      <Text style={styles.placeholderTitle}>Privacy Settings</Text>
-      <Text style={styles.placeholderText}>This section is under development</Text>
-    </View>
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Legal</Text>
+        <TouchableOpacity
+          style={styles.linkRow}
+          onPress={() => openLink('https://ufazien.com/privacy')}
+          activeOpacity={0.6}
+        >
+          <View style={styles.linkRowIcon}>
+            <Ionicons name="shield-checkmark-outline" size={20} color={c.primary} />
+          </View>
+          <View style={styles.linkRowContent}>
+            <Text style={styles.linkRowLabel}>Privacy Policy</Text>
+            <Text style={styles.linkRowDescription}>How we handle your data</Text>
+          </View>
+          <Ionicons name="open-outline" size={18} color={c.textTertiary} />
+        </TouchableOpacity>
+
+        <View style={styles.linkDivider} />
+
+        <TouchableOpacity
+          style={styles.linkRow}
+          onPress={() => openLink('https://ufazien.com/terms')}
+          activeOpacity={0.6}
+        >
+          <View style={styles.linkRowIcon}>
+            <Ionicons name="document-text-outline" size={20} color={c.primary} />
+          </View>
+          <View style={styles.linkRowContent}>
+            <Text style={styles.linkRowLabel}>Terms of Service</Text>
+            <Text style={styles.linkRowDescription}>Rules for using Ufazien</Text>
+          </View>
+          <Ionicons name="open-outline" size={18} color={c.textTertiary} />
+        </TouchableOpacity>
+      </Card>
+
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Support</Text>
+        <TouchableOpacity style={styles.linkRow} onPress={handleRateApp} activeOpacity={0.6}>
+          <View style={styles.linkRowIcon}>
+            <Ionicons name="star-outline" size={20} color={c.warning} />
+          </View>
+          <View style={styles.linkRowContent}>
+            <Text style={styles.linkRowLabel}>Rate Ufazien</Text>
+            <Text style={styles.linkRowDescription}>Enjoying the app? Leave a review</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={c.textTertiary} />
+        </TouchableOpacity>
+
+        <View style={styles.linkDivider} />
+
+        <TouchableOpacity
+          style={styles.linkRow}
+          onPress={() => router.push('/feedback')}
+          activeOpacity={0.6}
+        >
+          <View style={styles.linkRowIcon}>
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color={c.primary} />
+          </View>
+          <View style={styles.linkRowContent}>
+            <Text style={styles.linkRowLabel}>Send Feedback</Text>
+            <Text style={styles.linkRowDescription}>Report bugs or suggest features</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={c.textTertiary} />
+        </TouchableOpacity>
+      </Card>
+
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>About</Text>
+        <View style={styles.aboutRow}>
+          <Text style={styles.aboutLabel}>Version</Text>
+          <Text style={styles.aboutValue}>{appVersion}</Text>
+        </View>
+        <View style={styles.linkDivider} />
+        <View style={styles.aboutRow}>
+          <Text style={styles.aboutLabel}>Build</Text>
+          <Text style={styles.aboutValue}>Ufazien Mobile</Text>
+        </View>
+      </Card>
+
+      <Text style={styles.copyrightText}>
+        © {new Date().getFullYear()} Ufazien. All rights reserved.
+      </Text>
+    </ScrollView>
   );
 
   const renderAppearanceTab = () => {
@@ -817,7 +932,7 @@ export default function SettingsScreen() {
     { id: 'profile', name: 'Profile', icon: 'person' },
     { id: 'academic', name: 'Academic', icon: 'school' },
     { id: 'notifications', name: 'Notifications', icon: 'notifications' },
-    { id: 'privacy', name: 'Privacy', icon: 'lock-closed' },
+    { id: 'privacy', name: 'About', icon: 'information-circle' },
     { id: 'appearance', name: 'Appearance', icon: 'color-palette' },
     { id: 'security', name: 'Security', icon: 'shield-checkmark' },
   ];
@@ -1197,5 +1312,60 @@ const makeStyles = (c: ThemeColors) =>
       position: 'absolute',
       top: 6,
       right: 6,
+    },
+    linkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      gap: 14,
+    },
+    linkRowIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: c.subtle,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    linkRowContent: {
+      flex: 1,
+    },
+    linkRowLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: 2,
+    },
+    linkRowDescription: {
+      fontSize: 12,
+      color: c.textSecondary,
+    },
+    linkDivider: {
+      height: 1,
+      backgroundColor: c.borderSubtle,
+      marginVertical: 2,
+    },
+    aboutRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 14,
+    },
+    aboutLabel: {
+      fontSize: 14,
+      color: c.textSecondary,
+      fontWeight: '500',
+    },
+    aboutValue: {
+      fontSize: 14,
+      color: c.text,
+      fontWeight: '600',
+    },
+    copyrightText: {
+      fontSize: 12,
+      color: c.textTertiary,
+      textAlign: 'center',
+      marginTop: 16,
+      marginBottom: 8,
     },
   });

@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useThemedColors } from '@/contexts/ThemeContext';
@@ -195,6 +196,24 @@ export default function LoginScreen() {
               <Text style={styles.footerLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
+
+          <Text style={styles.legalText}>
+            By signing in, you agree to our{' '}
+            <Text
+              style={styles.legalLink}
+              onPress={() => WebBrowser.openBrowserAsync('https://ufazien.com/terms')}
+            >
+              Terms of Service
+            </Text>
+            {' and '}
+            <Text
+              style={styles.legalLink}
+              onPress={() => WebBrowser.openBrowserAsync('https://ufazien.com/privacy')}
+            >
+              Privacy Policy
+            </Text>
+            .
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -268,5 +287,17 @@ const makeStyles = (c: ThemeColors) =>
       fontSize: 14,
       color: c.primary,
       fontWeight: '600',
+    },
+    legalText: {
+      fontSize: 12,
+      color: c.textTertiary,
+      textAlign: 'center',
+      marginTop: 24,
+      lineHeight: 18,
+      paddingHorizontal: 12,
+    },
+    legalLink: {
+      color: c.primary,
+      fontWeight: '500',
     },
   });
