@@ -86,7 +86,6 @@ export default function AverageCalculatorScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [savingFields, setSavingFields] = useState<Set<number>>(new Set());
   const [localGrades, setLocalGrades] = useState<Record<number, string>>({});
   const [isEditingSchema, setIsEditingSchema] = useState(false); // Track if we're creating/editing vs using
   const [publicSchemasPage, setPublicSchemasPage] = useState(1);
@@ -246,8 +245,6 @@ export default function AverageCalculatorScreen() {
         return; // Invalid grade, don't save
       }
 
-      setSavingFields((prev) => new Set(prev).add(fieldGradeId));
-
       try {
         await apiClient.put(`/average/update-grade/${fieldGradeId}/`, {
           grade: parsedGrade,
@@ -275,12 +272,6 @@ export default function AverageCalculatorScreen() {
             updated[fieldGradeId] = fg?.grade?.toString() || '';
           }
           return updated;
-        });
-      } finally {
-        setSavingFields((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(fieldGradeId);
-          return newSet;
         });
       }
     },
@@ -775,18 +766,10 @@ export default function AverageCalculatorScreen() {
                             <View style={styles.gradesSection}>
                               <Text style={styles.gradesTitle}>Enter Grades</Text>
                               {currentUserSchemaGrades.field_grades.map((fg) => {
-                                const isSaving = savingFields.has(fg.id);
                                 const localValue =
                                   localGrades[fg.id] ?? (fg.grade?.toString() || '');
                                 return (
-                                  <Card
-                                    key={fg.id}
-                                    style={
-                                      isSaving
-                                        ? [styles.gradeCard, styles.gradeCardSaving]
-                                        : styles.gradeCard
-                                    }
-                                  >
+                                  <Card key={fg.id} style={styles.gradeCard}>
                                     <View style={styles.gradeHeader}>
                                       <View>
                                         <Text style={styles.gradeFieldName}>{fg.field_name}</Text>
@@ -796,11 +779,6 @@ export default function AverageCalculatorScreen() {
                                             ` • Contribution: ${(parseFloat(localValue) * fg.field_weight).toFixed(1)}`}
                                         </Text>
                                       </View>
-                                      {isSaving && (
-                                        <View style={styles.savingIndicator}>
-                                          <ActivityIndicator size="small" color={c.warning} />
-                                        </View>
-                                      )}
                                     </View>
 
                                     <Input
@@ -808,12 +786,8 @@ export default function AverageCalculatorScreen() {
                                       value={localValue}
                                       onChangeText={(value) => handleGradeChange(fg.id, value)}
                                       keyboardType="decimal-pad"
-                                      style={[
-                                        styles.gradeInput,
-                                        isSaving && styles.gradeInputSaving,
-                                      ]}
+                                      style={styles.gradeInput}
                                     />
-                                    {isSaving && <Text style={styles.savingText}>Saving...</Text>}
                                   </Card>
                                 );
                               })}
@@ -1109,10 +1083,6 @@ const makeStyles = (c: ThemeColors) =>
       borderWidth: 1,
       borderColor: c.border,
     },
-    gradeCardSaving: {
-      backgroundColor: c.warningTint,
-      borderColor: c.warning,
-    },
     gradeHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -1129,20 +1099,8 @@ const makeStyles = (c: ThemeColors) =>
       fontSize: 12,
       color: c.textSecondary,
     },
-    savingIndicator: {
-      padding: 4,
-    },
     gradeInput: {
       marginBottom: 0,
-    },
-    gradeInputSaving: {
-      borderColor: c.warning,
-    },
-    savingText: {
-      fontSize: 12,
-      color: c.warning,
-      marginTop: 4,
-      fontStyle: 'italic',
     },
     saveButton: {
       marginTop: 16,

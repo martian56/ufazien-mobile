@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   Modal,
 } from 'react-native';
@@ -79,8 +78,6 @@ export default function GPACalculatorScreen() {
   const [savedCalculations, setSavedCalculations] = useState<SavedCalculation[]>([]);
   const [, setLoading] = useState(false);
   const [refreshing] = useState(false);
-  const [inputSaving, setInputSaving] = useState(false);
-  const [gpaSaving, setGpaSaving] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [showConversionModal, setShowConversionModal] = useState(false);
   const { toast, showError, hideToast } = useToast();
@@ -278,7 +275,6 @@ export default function GPACalculatorScreen() {
 
     if (!hasData) return;
 
-    setInputSaving(true);
     try {
       await apiClient.post('/gpa/input-state/', {
         active_tab: activeTab,
@@ -287,8 +283,6 @@ export default function GPACalculatorScreen() {
       });
     } catch (error: any) {
       console.error('Error saving input state:', error);
-    } finally {
-      setInputSaving(false);
     }
   };
 
@@ -312,7 +306,6 @@ export default function GPACalculatorScreen() {
       return;
     }
 
-    setGpaSaving(true);
     try {
       const gpaValue = parseFloat(gpaResult.gpa.toFixed(3));
 
@@ -344,8 +337,6 @@ export default function GPACalculatorScreen() {
           'Failed to save GPA. Please check the value.';
         showError(errorMessage);
       }
-    } finally {
-      setGpaSaving(false);
     }
   };
 
@@ -564,14 +555,6 @@ export default function GPACalculatorScreen() {
                 </Text>
               </View>
               <View style={styles.headerRight}>
-                {(inputSaving || gpaSaving) && (
-                  <View style={styles.savingIndicator}>
-                    <ActivityIndicator size="small" color={inputSaving ? c.success : c.primary} />
-                    <Text style={styles.savingText}>
-                      {inputSaving ? 'Saving inputs...' : 'Saving GPA...'}
-                    </Text>
-                  </View>
-                )}
                 <TouchableOpacity onPress={resetCalculator} style={styles.resetButton}>
                   <Ionicons name="refresh" size={20} color={c.textSecondary} />
                 </TouchableOpacity>
@@ -858,15 +841,6 @@ const makeStyles = (c: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-    },
-    savingIndicator: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-    },
-    savingText: {
-      fontSize: 11,
-      color: c.textTertiary,
     },
     resetButton: {
       padding: 6,
