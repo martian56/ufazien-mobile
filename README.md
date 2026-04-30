@@ -11,7 +11,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/martian56/ufazien-mobile/ci.yml?label=CI&style=flat-square)](https://github.com/martian56/ufazien-mobile/actions)
-[![Version](https://img.shields.io/badge/version-1.4.0-blue?style=flat-square)]()
+[![Version](https://img.shields.io/badge/version-1.5.0-blue?style=flat-square)]()
 [![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android%20%7C%20Web-lightgrey?style=flat-square)]()
 [![Expo SDK](https://img.shields.io/badge/Expo%20SDK-54-000020?style=flat-square&logo=expo&logoColor=white)](https://expo.dev)
 

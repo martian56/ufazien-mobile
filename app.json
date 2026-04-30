@@ -2,7 +2,7 @@
   "expo": {
     "name": "Ufazien",
     "slug": "ufazien",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "com.ufazien",
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ufazien.mobile",
-      "buildNumber": "1.4.0"
+      "buildNumber": "1.5.0"
     },
     "android": {
       "package": "com.ufazien.mobile",
