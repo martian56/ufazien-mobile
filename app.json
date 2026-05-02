@@ -2,7 +2,7 @@
   "expo": {
     "name": "Ufazien",
     "slug": "ufazien",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "com.ufazien",
@@ -14,11 +14,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ufazien.mobile",
-      "buildNumber": "1.5.0"
+      "buildNumber": "1.5.1"
     },
     "android": {
       "package": "com.ufazien.mobile",
-      "versionCode": 4,
+      "versionCode": 12,
       "adaptiveIcon": {
         "backgroundColor": "#1E3A8A",
         "foregroundImage": "./assets/images/icon.png"
@@ -42,13 +42,7 @@
           "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": []
     },
     "web": {
       "output": "static",
@@ -60,7 +54,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "The app accesses your photos to let you upload your profile picture."
+          "photosPermission": false,
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ],
       [
